@@ -1,0 +1,25 @@
+<section id="c-deploy" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 10/11 · Triển khai</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">npm hoặc Docker alpine, không chạy root</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">npm ci rồi npm start; .env đọc bằng process.loadEnvFile, không cần dotenv</p>
+<p style="font-size:30px;line-height:1.35">Docker node:22-alpine, npm ci --omit=dev, user node, HEALTHCHECK</p>
+<p style="font-size:30px;line-height:1.35">Thiếu JWT_SECRET thì compose và app đều dừng (P5)</p>
+<p style="font-size:30px;line-height:1.35">Image không chứa demo, test hay /dev/*</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>Image node:22 đầy đủ</b>: lớn, nhiều gói không cần</p>
+<p style="font-size:30px;line-height:1.35"><b>Chạy bằng root</b>: tăng thiệt hại nếu bị khai thác</p>
+<p style="font-size:30px;line-height:1.35"><b>PM2 / Kubernetes</b>: vượt phạm vi một API in-memory một process</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> dữ liệu in-memory nên chỉ chạy một replica; HTTPS đặt ở reverse proxy phía trước.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · Dockerfile · docker-compose.yml</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">24</p>
+<aside>Có hai cách triển khai. Cách một: npm ci rồi npm start, Node 22 đọc file .env bằng process.loadEnvFile có sẵn, chỉ khi file tồn tại, nên không cần thư viện dotenv. Cách hai: Docker. Image dựa trên node:22-alpine cho nhỏ, chỉ cài dependency production bằng npm ci --omit=dev, chạy bằng user node chứ không phải root, có HEALTHCHECK gọi /health, và đóng server gọn khi nhận SIGTERM. Image đặt NODE_ENV=production nên thiếu JWT_SECRET thì app không khởi động; docker compose cũng dừng ngay nếu chưa đặt biến này. Thư mục demo bị loại khỏi image, nên production không có /dev/token. Không chọn image node:22 đầy đủ vì lớn hơn nhiều. Không dùng PM2 hay Kubernetes vì vượt phạm vi một API in-memory. Đánh đổi: dữ liệu in-memory nên chỉ chạy được một replica.</aside>
+</section>

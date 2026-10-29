@@ -1,0 +1,25 @@
+<section id="c-token" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 2/11 · Token và nguồn quyền</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">JWT chỉ có sub + scope, quyền đọc từ DB</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Role theo từng project, không có “một role” để đưa vào token</p>
+<p style="font-size:30px;line-height:1.35">Gỡ thành viên là mất quyền sau 0 giây (E5, C3)</p>
+<p style="font-size:30px;line-height:1.35">Scope giữ lại để tách lớp OAuth2 khỏi kiểm quyền (E7, E8)</p>
+<p style="font-size:30px;line-height:1.35">Ghim HS256 khi verify; production thiếu JWT_SECRET thì không chạy (P5)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>Role, tenant trong JWT</b>: quyền cũ sống tới khi token hết hạn</p>
+<p style="font-size:30px;line-height:1.35"><b>Opaque + introspection</b>: đề cho sẵn JWT, không xây lại OAuth2</p>
+<p style="font-size:30px;line-height:1.35"><b>ES256 + JWKS</b> như Block 5: một service tự ký và tự verify, chưa cần</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> mỗi request thêm một lần tra membership, với DB thật là một truy vấn có index (user_id, project_id).</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.2</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">16</p>
+<aside>Token chỉ mang danh tính sub và scope OAuth2, hạn 15 phút. Role, tenant, assignee, status luôn đọc từ DB. Lý do: role phụ thuộc từng project nên không có một role để đưa vào token, và quyền có thể bị thu hồi bất cứ lúc nào. Slide 20 của thầy cho thấy role trong JWT 15 phút thì người bị gỡ còn truy cập tới 15 phút; đọc DB thì 0 giây, test E5 và C3. Scope vẫn giữ để minh họa ba lớp: E7 token chỉ có tasks:read vẫn bị 404 với B1, E8 Owner thiếu scope vẫn 403. Khi verify nhóm ghim thuật toán HS256 để chặn alg none. Production thiếu JWT_SECRET thì app không khởi động, test P5. Block 5 dùng ES256 vì Wallet API verify token do AS khác ký; ở đây một service tự ký và tự verify, khi tách nhiều service thì nên chuyển sang ES256.</aside>
+</section>

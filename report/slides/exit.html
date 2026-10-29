@@ -1,0 +1,27 @@
+<section id="exit" data-transition="fade" style="background:#ECE7DC;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Tổng kết</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Trả lời câu hỏi kết thúc</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:32px">
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">1 · Scope tasks:read có đủ để đọc B1?</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Không. Scope giới hạn token, không chứng minh Alice có quan hệ với B1. Test E7.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">2 · Member còn cần kiểm dữ liệu nào?</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Project của task, assignee, status, tenant. Tất cả đọc từ DB. Test O12 đến O16.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">3 · Ẩn nút Delete có đủ không?</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Không. curl bỏ qua giao diện, server phải tự kiểm role. Test O6: Bob xóa project bị 403.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">4 · Hàng triệu tài liệu chia sẻ qua nhóm?</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Một PDP chung, quan hệ lưu như dữ liệu (ReBAC, OpenFGA), tách check và list, cache có thu hồi, một bộ test chung.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · docs/thuyet-minh/07-cau-hoi-ket-thuc.md</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">29</p>
+<aside>Bốn câu hỏi kết thúc của buổi học, mỗi câu em gắn với một test trong bài. Câu 1: scope không đủ, test E7. Câu 2: ngoài role còn project, assignee, status, tenant, tất cả đọc từ DB. Câu 3: ẩn nút chỉ là giao diện, test O6 gọi thẳng DELETE và bị 403, còn ở starter request này xóa project thật. Câu 4: giữ một PDP chung, lưu quan hệ như dữ liệu kiểu OpenFGA, tách check và list giống test C1 của em, có cache kèm thu hồi, và một bộ test chung.</aside>
+</section>

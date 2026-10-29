@@ -51,6 +51,15 @@ textarea, #path { font-family: var(--mono); font-size: 13px }
 .allow { background: var(--blue-bg); color: var(--blue) }
 .deny { background: var(--orange-bg); color: var(--orange) }
 .auth { background: var(--gray-bg); color: var(--ink) }
+.actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap }
+a.link { color: var(--blue); font-weight: 600; text-decoration: none; border: 1px solid var(--blue); border-radius: 8px; padding: 7px 12px }
+a.link:hover { background: var(--blue-bg) }
+.pdp { margin-top: 10px; padding: 10px 12px; border-radius: 8px; border: 1px dashed var(--line); font-size: 13px }
+.pdp b { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted) }
+.pdp ul { margin: 6px 0 0; padding-left: 18px }
+.pdp li { margin-top: 2px }
+.pdp .tag { font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 1px 6px; border-radius: 4px }
+.pdp .tag.allow, .pdp .tag.deny { display: inline-block }
 .verdict { margin-top: 10px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: #fff; font-size: 14px }
 .verdict p { margin: 4px 0 0 }
 .log { font-family: var(--mono); font-size: 12px; color: var(--muted); margin: 8px 0 0; white-space: pre-wrap }
@@ -86,7 +95,10 @@ td.mono { font-family: var(--mono) }
     <h1>Task API · Demo phân quyền</h1>
     <p class="sub">Block 6 · server demo cục bộ: token cấp qua /dev/token, mọi request đi qua app thật</p>
   </div>
-  <button id="reset">Reset dữ liệu về seed</button>
+  <div class="actions">
+    <a class="link" href="/docs" target="_blank" rel="noopener">Swagger UI (OpenAPI)</a>
+    <button id="reset">Reset dữ liệu về seed</button>
+  </div>
 </header>
 
 <main>
@@ -122,6 +134,7 @@ td.mono { font-family: var(--mono) }
       <h2>3 · Response</h2>
       <div id="status" class="status">Chưa gửi request nào</div>
       <div id="verdict"></div>
+      <div id="pdp"></div>
       <pre id="resBody">—</pre>
       <details><summary>Lệnh curl tương đương (chạy trong thư mục task-api)</summary><pre id="curl">—</pre></details>
     </div>
@@ -177,7 +190,7 @@ const QUICK = [
 const SCENARIOS = [
   { id: 'O1', group: 'V1 · IDOR/BOLA', title: 'Anonymous đọc A1', as: null, method: 'GET', path: '/tasks/A1', expect: 401, why: 'Không có token nên lớp authentication chặn trước mọi thứ.' },
   { id: 'O2', group: 'V1 · IDOR/BOLA', title: 'Alice đọc A1', as: 'alice', method: 'GET', path: '/tasks/A1', expect: 200, why: 'Alice là thành viên project Alpha chứa A1.' },
-  { id: 'O3', group: 'V1 · IDOR/BOLA', title: 'Alice đọc B1 (project Beta)', as: 'alice', method: 'GET', path: '/tasks/B1', expect: 404, why: 'Alice không thuộc Beta (ReBAC). Trả 404 để che sự tồn tại của B1.' },
+  { id: 'O3', group: 'V1 · IDOR/BOLA', title: 'Alice đọc B1 (project Beta)', as: 'alice', method: 'GET', path: '/tasks/B1', expect: 404, why: 'Beta thuộc tenant khác nên bị chặn ngay ở tenant boundary (ở V1–V3 chưa có tenant thì bước ReBAC chặn). Trả 404 để che sự tồn tại của B1.' },
   { id: 'O4', group: 'V1 · IDOR/BOLA', title: 'Charlie đọc B1', as: 'charlie', method: 'GET', path: '/tasks/B1', expect: 200, why: 'Charlie là Owner Beta: bản sửa không từ chối người hợp lệ.' },
   { id: 'O5', group: 'V2 · RBAC', title: 'Vera (Viewer) sửa A1', as: 'vera', method: 'PATCH', path: '/tasks/A1', body: { title: 'Viewer sửa' }, expect: 403, why: 'Viewer không có permission task:edit (RBAC).' },
   { id: 'O6', group: 'V2 · RBAC', title: 'Bob (Member) xóa project Alpha', as: 'bob', method: 'DELETE', path: '/projects/alpha', expect: 403, why: 'Member không có project:delete. Ẩn nút trên giao diện không đủ, server phải chặn.' },
@@ -188,17 +201,35 @@ const SCENARIOS = [
   { id: 'O11', group: 'V3 · ReBAC + ABAC', title: 'Bob sửa A1 (được giao, còn Open)', as: 'bob', method: 'PATCH', path: '/tasks/A1', body: { title: 'Bob cập nhật' }, expect: 200, why: 'Member + được giao + task Open: đủ ba điều kiện.' },
   { id: 'O12', group: 'V3 · ReBAC + ABAC', title: 'Bob sửa A2 (chưa được giao)', as: 'bob', method: 'PATCH', path: '/tasks/A2', body: { title: 'Bob sửa A2' }, expect: 403, why: 'ABAC: assignee của A2 không phải Bob.' },
   { id: 'O13', group: 'V3 · ReBAC + ABAC', title: 'Bob sửa A1 khi A1 đã Closed', setup: [{ as: 'alice', method: 'PATCH', path: '/tasks/A1', body: { status: 'Closed' } }], as: 'bob', method: 'PATCH', path: '/tasks/A1', body: { title: 'Sửa task đã đóng' }, expect: 403, why: 'ABAC: task không còn Open. Bước chuẩn bị dùng Owner đóng A1.' },
-  { id: 'O14', group: 'V3 · ReBAC + ABAC', title: 'Bob sửa B1 (project khác)', as: 'bob', method: 'PATCH', path: '/tasks/B1', body: { title: 'Sửa task Beta' }, expect: 404, why: 'Bob không thuộc Beta (ReBAC) nên không được biết B1 tồn tại.' },
+  { id: 'O14', group: 'V3 · ReBAC + ABAC', title: 'Bob sửa B1 (project khác)', as: 'bob', method: 'PATCH', path: '/tasks/B1', body: { title: 'Sửa task Beta' }, expect: 404, why: 'B1 thuộc project và tenant khác: Bob không được biết B1 tồn tại, nên nhận 404 thay vì 403.' },
   { id: 'O15', group: 'V4 · Tenant', title: 'Dana (Admin tenant Alpha) đọc A1', as: 'dana', method: 'GET', path: '/tasks/A1', expect: 200, why: 'Admin có toàn quyền trong tenant của mình.' },
   { id: 'O16', group: 'V4 · Tenant', title: 'Dana đọc B1 (tenant Beta)', as: 'dana', method: 'GET', path: '/tasks/B1', expect: 404, why: 'Tenant boundary đứng trước kiểm Admin.' },
   { id: 'O17', group: 'V4 · Tenant', title: 'Dana đọc B1 kèm X-Tenant-Id: beta', as: 'dana', method: 'GET', path: '/tasks/B1', headers: { 'X-Tenant-Id': 'beta' }, expect: 404, why: 'Tenant của người gọi lấy từ DB, header bị bỏ qua.' },
   { id: 'E1', group: 'Bổ sung', title: 'Token của Alice đã hết hạn', as: 'alice', expired: true, method: 'GET', path: '/tasks/A1', expect: 401, why: 'Token hết hạn thì không còn xác thực được.' },
   { id: 'E3', group: 'Bổ sung', title: 'Bob gửi assignee=bob để sửa A2', as: 'bob', method: 'PATCH', path: '/tasks/A2', body: { assignee: 'bob', title: 'Tự giao cho mình' }, expect: 403, why: 'Kiểm quyền trên bản ghi đang lưu, trước khi áp dụng body.' },
-  { id: 'E5', group: 'Bổ sung', title: 'Owner gỡ Bob, Bob đọc A1 ngay sau đó', setup: [{ as: 'alice', method: 'DELETE', path: '/projects/alpha/members/bob' }], as: 'bob', method: 'GET', path: '/tasks/A1', expect: 404, why: 'Thu hồi có hiệu lực ngay: role đọc từ DB mỗi request, không cache.' },
+  { id: 'E5', group: 'Bổ sung', title: 'Owner gỡ Bob, Bob đọc A1 ngay sau đó', setup: [{ as: 'alice', method: 'DELETE', path: '/projects/alpha/members/bob' }], as: 'bob', method: 'GET', path: '/tasks/A1', expect: 404, why: 'Thu hồi có hiệu lực ngay (ReBAC: không còn là thành viên). Quan hệ đọc từ DB mỗi request, không cache.' },
   { id: 'E7', group: 'Bổ sung', title: 'Token chỉ có tasks:read đọc B1', as: 'alice', scope: 'tasks:read', method: 'GET', path: '/tasks/B1', expect: 404, why: 'Scope giới hạn token, không thay được kiểm quyền trên object.' },
 ]
 
-const ui = { user: 'alice', busy: false }
+const ui = { user: 'alice', busy: false, auditSeq: 0 }
+
+const REASONS = {
+  other_tenant: 'khác tenant (tenant boundary)',
+  tenant_admin: 'Admin của tenant',
+  not_member: 'không là thành viên project (ReBAC)',
+  role_lacks_permission: 'role không có permission cho action (RBAC)',
+  not_assignee: 'task không giao cho người gọi (ABAC)',
+  task_closed: 'task đã Closed (ABAC)',
+  missing_task: 'thiếu dữ liệu task (fail closed)',
+}
+const reasonText = r => REASONS[r] || (r.startsWith('role:') ? `role ${r.slice(5)} có permission` : r)
+
+// Quyết định mới của PDP kể từ lần đọc trước (audit log phía server, chỉ server demo mới mở endpoint này).
+async function newAudit() {
+  const { entries } = await (await fetch(`/dev/audit?after=${ui.auditSeq}`)).json()
+  if (entries.length) ui.auditSeq = entries.at(-1).seq
+  return entries
+}
 const tokens = new Map()
 
 const nameOf = id => (USERS.find(u => u.id === id) || USERS[0]).name
@@ -266,8 +297,29 @@ function showResponse(req, r, extra = {}) {
       extra.log && extra.log.length ? el('p', { class: 'log' }, extra.log.join('\n')) : '',
     ))
   }
+  renderPdp(req, r, extra.audit)
   $('#resBody').textContent = pretty(r.text)
   $('#curl').textContent = curlOf(req)
+}
+
+function renderPdp(req, r, entries) {
+  const box = $('#pdp')
+  box.replaceChildren()
+  if (entries === undefined) return
+  let body
+  if (entries.length) {
+    body = el('ul', {}, ...entries.map(e => el('li', {},
+      el('span', { class: `tag ${e.allow ? 'allow' : 'deny'}` }, e.allow ? 'ALLOW' : 'DENY'), ' ',
+      `${reasonText(e.reason)} · ${e.userId} · ${e.action} · ${e.taskId ? `task ${e.taskId}, ` : ''}project ${e.projectId}`)))
+  } else {
+    const why = r.status === 401 ? 'bị chặn ở lớp xác thực trước khi tới PDP'
+      : r.status === 403 ? 'token thiếu scope, bị chặn trước khi tới PDP'
+      : req.method === 'GET' && req.path.split('?')[0].replace(/\/$/, '') === '/tasks' ? 'danh sách lọc bằng readableProjectIds ngay trong truy vấn, không gọi decide() cho từng task'
+      : r.status === 404 ? 'resource không tồn tại, không có gì để quyết định'
+      : 'request không tới PDP'
+    body = el('p', { class: 'log' }, `Không có quyết định: ${why}.`)
+  }
+  box.append(el('div', { class: 'pdp' }, el('b', {}, 'Quyết định của PDP · audit log phía server, client không thấy'), body))
 }
 
 function showError(err) {
@@ -318,7 +370,7 @@ async function sendFromBuilder() {
   try {
     const req = readBuilder()
     const r = await send(req)
-    showResponse(req, r)
+    showResponse(req, r, { audit: await newAudit() })
   } catch (err) {
     showError(err)
   }
@@ -336,7 +388,9 @@ async function runScenario(sc, { show = true } = {}) {
     const r = await send(step)
     log.push(`Chuẩn bị: ${nameOf(step.as)} ${step.method} ${step.path}${step.body ? ' ' + JSON.stringify(step.body) : ''} → ${r.status}`)
   }
+  await newAudit() // bỏ qua quyết định của bước chuẩn bị
   const r = await send(sc)
+  const decisions = await newAudit()
   const pass = r.status === sc.expect
   const badge = document.getElementById(`res-${sc.id}`)
   badge.className = `res ${pass ? 'pass' : 'fail'}`
@@ -347,7 +401,7 @@ async function runScenario(sc, { show = true } = {}) {
     $('#scope').value = sc.scope || FULL
     $('#expired').checked = !!sc.expired
     fillBuilder(sc)
-    showResponse(sc, r, { id: sc.id, expect: sc.expect, why: sc.why, log })
+    showResponse(sc, r, { id: sc.id, expect: sc.expect, why: sc.why, log, audit: decisions })
   }
   return pass
 }
@@ -444,6 +498,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey 
 renderUsers()
 renderScenarios()
 refreshState()
+newAudit().catch(() => {})
 </script>
 </body>
 </html>

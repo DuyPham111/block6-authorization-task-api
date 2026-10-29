@@ -1,0 +1,26 @@
+<section id="codes" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V1 · Quy ước mã lỗi</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">401, 403 hay 404?</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:3;display:flex;flex-direction:column">
+<table style="font-size:30px;color:#1B2430">
+<tr style="background:#ECE7DC"><th style="width:14%">Mã</th><th style="width:62%">Khi nào</th><th style="width:24%">Test</th></tr>
+<tr><td>401</td><td>Thiếu token, sai chữ ký, hết hạn</td><td>O1, E1</td></tr>
+<tr><td>403</td><td>Token thiếu scope (insufficient_scope)</td><td>E8</td></tr>
+<tr><td>403</td><td>Cùng project nhưng role hoặc điều kiện không cho phép</td><td>O5, O12</td></tr>
+<tr><td>404</td><td>Không tồn tại, hoặc ngoài project, ngoài tenant</td><td>O3, O16, E2</td></tr>
+</table>
+</div>
+<div style="flex:2;display:flex;flex-direction:column;gap:20px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.2">Vì sao 404 cho người ngoài?</h3>
+<p style="font-size:30px;line-height:1.4">403 xác nhận B1 có tồn tại, kẻ tấn công dò được ID.</p>
+<p style="font-size:30px;line-height:1.4">Body của "bị che" giống hệt "không tồn tại" (test E2).</p>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Người cùng project vẫn nhận 403 để biết lý do.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">07</p>
+<aside>Quy ước mã lỗi. Lỗi 401 khi chưa xác thực được người gọi. Lỗi 403 có hai loại: thiếu scope, hoặc người cùng project nhưng role hay điều kiện không cho phép. Lỗi 404 khi không tồn tại, hoặc người gọi không được biết resource tồn tại. Đề chấp nhận 403 hoặc 404, nhưng em chọn 404 cho người ngoài để chống dò ID. Test E2 so body của B1 bị che với Z9 không tồn tại, hai body phải giống hệt. Test của em kiểm mã cụ thể chứ không chấp nhận cả hai, để khóa luôn quy ước này. Còn chênh lệch thời gian rất nhỏ giữa hai trường hợp: nếu cần chặt hơn thì đưa điều kiện quyền vào chính câu truy vấn.</aside>
+</section>

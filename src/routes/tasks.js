@@ -8,11 +8,11 @@ router.get('/', requireScope('tasks:read'), (req, res) => {
 })
 
 router.get('/:id', requireScope('tasks:read'), (req, res) => {
-  res.json(taskService.getTask(req.user, req.params.id))
+  res.json(taskService.getTask(req.user, String(req.params.id)))
 })
 
 router.patch('/:id', requireScope('tasks:write'), (req, res) => {
-  res.json(taskService.updateTask(req.user, req.params.id, req.body))
+  res.json(taskService.updateTask(req.user, String(req.params.id), req.body))
 })
 
 module.exports = router

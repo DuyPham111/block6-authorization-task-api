@@ -1,0 +1,35 @@
+<section id="v2" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V2 · RBAC</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">V2: RBAC trong phạm vi project</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:3;display:flex;flex-direction:column;gap:24px">
+<table style="font-size:30px;color:#1B2430">
+<tr style="background:#ECE7DC"><th style="width:20%">Role</th><th style="width:20%">Đọc task</th><th style="width:20%">Sửa task</th><th style="width:20%">Xóa project</th><th style="width:20%">Thành viên</th></tr>
+<tr><td>Viewer</td><td style="color:#1F5FA8">Được</td><td style="color:#A3480A">Không</td><td style="color:#A3480A">Không</td><td style="color:#A3480A">Không</td></tr>
+<tr><td>Member</td><td style="color:#1F5FA8">Được</td><td style="color:#1F5FA8">Được*</td><td style="color:#A3480A">Không</td><td style="color:#A3480A">Không</td></tr>
+<tr><td>Owner</td><td style="color:#1F5FA8">Được</td><td style="color:#1F5FA8">Được</td><td style="color:#1F5FA8">Được</td><td style="color:#1F5FA8">Được</td></tr>
+</table>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">* Từ V3: chỉ task được giao cho mình và còn Open. Mỗi ô là một test (M1–M7, O5–O9).</p>
+<p style="font-size:30px;line-height:1.4"><b>13 đỏ → 21/21 xanh</b> · oracle 7 → 12/17</p>
+</div>
+<div style="flex:2;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">Role lấy từ bảng thành viên</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">O10: role=Admin qua body, header, query vẫn 403</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">PATCH chỉ nhận field cho phép</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">E9: projectId, id trong body bị bỏ qua</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">Member không tự nâng quyền</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">E12: tự thêm mình làm Owner vẫn 403</p>
+</div>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · git diff v1 v2</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">08</p>
+<aside>V2 chặn BFLA, tức gọi chức năng vượt role bằng request trực tiếp. Role gắn với từng project chứ không phải toàn hệ thống, vì một người có thể là Owner project này và Viewer project khác. Code kiểm theo permission, ví dụ project:delete, chứ không viết if role bằng Owner, nên thêm role chỉ cần sửa một bảng. Role luôn lấy từ bảng thành viên: test O10 gửi role=Admin qua cả body, header và query, kết quả vẫn 403. PATCH chỉ nhận title, description, status để chặn mass assignment. Mỗi test từ chối đều kiểm dữ liệu không bị thay đổi. Vì sao Member không quản lý thành viên: đó là quyền cấp quyền cho người khác, có thì Member tự nâng mình lên Owner được.</aside>
+</section>

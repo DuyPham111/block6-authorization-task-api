@@ -1,0 +1,25 @@
+<section id="c-model" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 3/11 · Mô hình access control</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">RBAC + ReBAC + ABAC, có tenant boundary</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35"><b>RBAC</b>: role trong project quyết định loại thao tác</p>
+<p style="font-size:30px;line-height:1.35"><b>ReBAC</b>: quan hệ thành viên user → project → task</p>
+<p style="font-size:30px;line-height:1.35"><b>ABAC</b>: assignee và status của chính task đó</p>
+<p style="font-size:30px;line-height:1.35"><b>Tenant</b>: ranh giới cứng, đứng trước mọi role (v4-pre chứng minh)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>ACL</b>: 20 user × 100 task = 2.000 mục, thêm task phải ghi thêm</p>
+<p style="font-size:30px;line-height:1.35"><b>Chỉ RBAC</b>: không biểu diễn được “task giao cho mình, còn Open”</p>
+<p style="font-size:30px;line-height:1.35"><b>Chỉ ABAC</b>: mất ma trận role × action để đối chiếu, test từng ô</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> ba mô hình trong một hàm cần thứ tự cố định. E20, E21 chứng minh không lớp nào thay được lớp khác.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.4</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">17</p>
+<aside>Mô hình phân quyền là kết hợp, đúng như ví dụ V3 trên slide 11 của thầy. RBAC trả lời role có được loại thao tác này không. ReBAC trả lời người gọi có quan hệ thành viên với project chứa task không. ABAC trả lời với task cụ thể này, có được giao cho mình và còn Open không. Tenant là ranh giới cứng kiểm đầu tiên. Không chọn ACL vì bài không cần chia sẻ riêng một task, mà ACL cần số user nhân số task mục, slide 12 tính ra 2.000 mục. Không chỉ dùng RBAC vì role không biểu diễn được điều kiện riêng của từng task. Không chỉ dùng ABAC vì sẽ mất ma trận role nhân action rõ ràng để đối chiếu và test từng ô. Hai test E20 và E21: Viewer được giao task vẫn không sửa được, assignee bị gỡ khỏi project cũng không sửa được.</aside>
+</section>

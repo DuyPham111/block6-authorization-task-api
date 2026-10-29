@@ -1,0 +1,26 @@
+<section id="checklist" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Giải pháp · Nhất quán và hiệu năng</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Check và list: hai đường, một luật</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.2">Check · GET /tasks/:id</h3>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#1F5FA8">loadTask(id) → decide()</p>
+<p style="font-size:30px;line-height:1.4">Một quyết định cho một task.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.2">List · GET /tasks</h3>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#1F5FA8">readableProjectIds(user)<br>→ WHERE project_id IN (...)</p>
+<p style="font-size:30px;line-height:1.4">Một truy vấn cho cả danh sách, không N+1.</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#DCE6F2;border-radius:16px;padding:40px">
+<p style="font-size:30px;font-weight:700;line-height:1.3;color:#1F5FA8">Test C1: 6 user × 4 task</p>
+<p style="font-size:30px;line-height:1.4">Danh sách phải đúng bằng tập task mà check trả 200. Sửa luật một nơi mà quên nơi kia thì test đỏ.</p>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Thu hồi quyền có hiệu lực sau 0 giây (E5, C3): role đọc từ DB mỗi request, không cache, không nằm trong JWT.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · test/consistency.test.js</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">12</p>
+<aside>Khi dữ liệu lớn có hai vấn đề. Thứ nhất, danh sách mà kiểm từng task sẽ tốn N+1 truy vấn. Em đưa điều kiện quyền vào chính truy vấn danh sách, tương đương JOIN project_members. Thứ hai, như vậy cùng một luật được viết ở hai chỗ, decide cho check và readableProjectIds cho list. Để chúng không lệch nhau, test C1 chạy với cả 6 user và 4 task: gọi list một lần, gọi check từng task, rồi so hai tập kết quả phải bằng nhau. Về thu hồi quyền: em đọc membership mỗi request nên gỡ Bob là Bob mất quyền ngay. Nếu cần cache thì để TTL ngắn và xóa cache khi đổi quyền.</aside>
+</section>

@@ -4,23 +4,44 @@
   "private": true,
   "description": "Block 6 - Authorization & Access Control: Task Management API",
   "main": "src/server.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node src/server.js",
     "demo": "node demo/server.js",
     "test": "jest --runInBand",
-    "token": "node scripts/token.js"
+    "test:coverage": "jest --runInBand --coverage",
+    "typecheck": "tsc -p .",
+    "check": "npm run typecheck && npm test",
+    "token": "node scripts/token.js",
+    "oracle": "node scripts/oracle-matrix.js",
+    "report": "node scripts/build-report.js"
   },
   "jest": {
     "testEnvironment": "node",
     "verbose": true,
-    "reporters": ["default"]
+    "reporters": [
+      "default"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/server.js",
+      "!src/load-env.js"
+    ]
   },
   "dependencies": {
     "express": "^5.3.0",
     "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.6.6",
+    "@types/swagger-ui-express": "^4.1.8",
     "jest": "^30.5.2",
-    "supertest": "^7.3.1"
+    "supertest": "^7.3.1",
+    "swagger-ui-express": "^5.0.1",
+    "typescript": "^7.0.2"
   }
 }

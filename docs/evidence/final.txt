@@ -1,120 +1,145 @@
-PASS test/policy.unit.test.js
-  PDP decide() - lý do của từng nhánh
-    √ [U1] charlie task:read trên A1 -> allow=false (other_tenant) (15 ms)
-    √ [U1] dana project:delete trên A1 -> allow=true (tenant_admin) (3 ms)
-    √ [U1] erin task:read trên A1 -> allow=false (not_member) (3 ms)
-    √ [U1] vera task:edit trên A1 -> allow=false (role_lacks_permission) (2 ms)
-    √ [U1] bob task:edit trên A2 -> allow=false (not_assignee) (4 ms)
-    √ [U1] alice member:manage trên A1 -> allow=true (role:Owner) (2 ms)
-    √ [U2] Member sửa task đã đóng -> task_closed (4 ms)
-    √ [U3] Role lạ "Admin" trong dữ liệu thành viên không có quyền nào (deny by default) (2 ms)
-    √ [U3] Role lạ "__proto__" trong dữ liệu thành viên không có quyền nào (deny by default) (3 ms)
-    √ [U3] Role lạ "constructor" trong dữ liệu thành viên không có quyền nào (deny by default) (3 ms)
-    √ [U3] Role lạ "toString" trong dữ liệu thành viên không có quyền nào (deny by default) (1 ms)
-    √ [U4] Action chưa khai báo trong policy bị từ chối, kể cả với Owner (1 ms)
+$ npm run typecheck
+typecheck: 0 lỗi
 
-PASS test/v1.idor.test.js
-  V1 - object-level authorization khi đọc task
-    √ [O1] Anonymous đọc A1 -> 401 (94 ms)
-    √ [O2] Alice đọc A1 (cùng project) -> 200 (24 ms)
-    √ [O3] Alice đọc B1 (project Beta) -> 404, không lộ nội dung (15 ms)
-    √ [O4] Charlie đọc B1 (Owner Beta) -> 200 (13 ms)
-    √ [E1] Token của Alice đã hết hạn -> 401 (13 ms)
-    √ [E2] Task không tồn tại -> 404, body giống hệt khi bị che (không dò được ID) (20 ms)
-    √ [E4] Alice đọc danh sách task của project Beta -> 404 (entry point thứ hai) (11 ms)
-    √ [E4b] Alice đọc danh sách task của project Alpha -> 200, chỉ có task Alpha (10 ms)
-    √ [E6] Bob tự khai userId=charlie (query, header, body) vẫn không đọc được B1 (30 ms)
-    √ [E7] Token chỉ có scope tasks:read: đọc được A1 nhưng vẫn không đọc được B1 (19 ms)
-    √ [E8] Token thiếu scope tasks:read -> 403 insufficient_scope dù Alice là Owner (11 ms)
-
-PASS test/v4.tenant.test.js
-  V4 - Admin tenant Alpha không vượt tenant boundary
-    √ [O15] Dana (Admin tenant Alpha) đọc A1 -> 200 (80 ms)
-    √ [O16] Dana đọc B1 (tenant Beta) -> 404 (17 ms)
-    √ [O17] Dana đọc B1 với header X-Tenant-Id: beta -> 404 (13 ms)
-    √ [E22] Dana gửi tenantId=beta trong query và body -> 404 (29 ms)
-    √ [E23] Dana xem danh sách hoặc xóa project Beta -> 404, Beta vẫn còn (26 ms)
-  V4 - quyền Admin bên trong tenant của mình
-    √ [E24] Dana quản lý thành viên project Alpha dù không phải member -> 201 (11 ms)
-  V4 - dữ liệu thành viên không vượt tenant
-    √ [E25] Membership chéo tenant (dữ liệu lỗi) vẫn bị chặn bởi tenant boundary -> 404 (12 ms)
-    √ [E26] Owner Alpha thêm user của tenant Beta vào project -> 400 (27 ms)
-
-PASS test/v3.rebac-abac.test.js
-  V3 - Member chỉ sửa task được giao cho mình khi task còn Open
-    √ [O11] Bob sửa A1 (giao cho Bob, Open) -> 200 (100 ms)
-    √ [O12] Bob sửa A2 (chưa được giao) -> 403, A2 không đổi (19 ms)
-    √ [O13] Bob sửa A1 khi A1 đã Closed -> 403 (13 ms)
-    √ [O14] Bob sửa B1 (project khác) -> 404 (11 ms)
-  V3 - điều kiện lấy từ dữ liệu đang lưu, không lấy từ body
-    √ [E3] Bob gửi assignee=bob để sửa A2 -> 403, A2 vẫn chưa giao (13 ms)
-    √ [E16] Bob đóng A1 được, nhưng gửi status=Open để mở lại thì bị từ chối (24 ms)
-  V3 - kết hợp RBAC, ReBAC và ABAC
-    √ [E17] Owner sửa A2 dù không được giao -> 200 (điều kiện assignee chỉ áp cho Member) (13 ms)
-    √ [E18] Owner mở lại task đã đóng -> 200 (18 ms)
-    √ [E20] Viewer được giao task vẫn không sửa được -> 403 (assignee không thay role) (15 ms)
-    √ [E21] Bob vẫn là assignee của A1 nhưng đã bị gỡ khỏi project -> 404 (cần quan hệ member) (13 ms)
-
-PASS test/v2.rbac.test.js
-  V2 - permission matrix theo role trong project
-    √ [M1] Viewer đọc task -> allow=true (94 ms)
-    √ [O5] Viewer sửa task -> allow=false (37 ms)
-    √ [M2] Viewer xóa project -> allow=false (16 ms)
-    √ [M3] Viewer quản lý thành viên -> allow=false (14 ms)
-    √ [M4] Member đọc task -> allow=true (13 ms)
-    √ [M5] Member sửa task -> allow=true (12 ms)
-    √ [O6] Member xóa project -> allow=false (12 ms)
-    √ [O7] Member quản lý thành viên -> allow=false (10 ms)
-    √ [M6] Owner đọc task -> allow=true (15 ms)
-    √ [M7] Owner sửa task -> allow=true (13 ms)
-    √ [O8] Owner xóa project -> allow=true (13 ms)
-    √ [O9] Owner quản lý thành viên -> allow=true (11 ms)
-  V2 - role không lấy từ request
-    √ [O10] Bob tự gửi role=Admin (body, header, query) để xóa project -> 403 (13 ms)
-    √ [E12] Member tự thêm mình làm Owner -> 403, role vẫn là Member (27 ms)
-    √ [E10] Owner mời thành viên với role không có trong hệ thống (Admin) -> 400 (19 ms)
-  V2 - quản lý thành viên và thu hồi quyền
-    √ [E5] Owner gỡ Bob khỏi Alpha -> Bob mất quyền đọc A1 ngay lập tức (31 ms)
-    √ [E13] Member gỡ thành viên khác -> 403, Vera vẫn còn trong project (11 ms)
-    √ [E11] Không gỡ được Owner cuối cùng của project -> 409 (11 ms)
-    √ [E14] Owner Beta không quản lý được thành viên project Alpha -> 404 (9 ms)
-  V2 - PATCH chỉ nhận field được phép
-    √ [E9] Owner gửi projectId/id trong body -> bị bỏ qua, task vẫn thuộc Alpha (10 ms)
-    √ [E15] Status ngoài Open/Closed -> 400 (8 ms)
+$ npm run test:coverage
+PASS test/ops.test.js
+  Vận hành và cấu hình an toàn
+    √ [P1] GET /health trả 200 không cần token, không chứa dữ liệu nghiệp vụ (49 ms)
+    √ [P2] Response không lộ framework qua header X-Powered-By (12 ms)
+    √ [P3] Body JSON sai cú pháp -> 400 invalid_json (17 ms)
+    √ [P4] Body lớn hơn 10kb -> 413 payload_too_large, task không đổi (7 ms)
+    √ [P5] NODE_ENV=production mà thiếu JWT_SECRET thì không khởi động (120 ms)
+  Audit log quyết định phân quyền
+    √ [L1] Deny ghi lý do ra log JSON, còn client chỉ nhận 404 chung (18 ms)
+    √ [L2] AUDIT_LOG=deny không in quyết định cho phép; AUDIT_LOG=all thì in (15 ms)
+    √ [L3] Bộ nhớ audit gần nhất giữ thứ tự và lọc được theo seq (17 ms)
+  Tài liệu OpenAPI khớp route thật
+    √ [D1] Mọi route của API đều có trong docs/openapi.yaml và ngược lại (2 ms)
 
 PASS test/consistency.test.js
   Nhất quán giữa check (GET /tasks/:id) và list (GET /tasks)
-    √ [C1] alice: task trong danh sách đúng bằng các task đọc được từng cái (148 ms)
-    √ [C1] bob: task trong danh sách đúng bằng các task đọc được từng cái (51 ms)
-    √ [C1] vera: task trong danh sách đúng bằng các task đọc được từng cái (38 ms)
-    √ [C1] charlie: task trong danh sách đúng bằng các task đọc được từng cái (43 ms)
-    √ [C1] erin: task trong danh sách đúng bằng các task đọc được từng cái (55 ms)
-    √ [C1] dana: task trong danh sách đúng bằng các task đọc được từng cái (61 ms)
-    √ [C2] Danh sách theo từng người: không ai thấy task ngoài phạm vi (33 ms)
-    √ [C3] Sau khi bị gỡ khỏi project, task biến mất khỏi cả check lẫn list (16 ms)
+    √ [C1] alice: task trong danh sách đúng bằng các task đọc được từng cái (24 ms)
+    √ [C1] bob: task trong danh sách đúng bằng các task đọc được từng cái (27 ms)
+    √ [C1] vera: task trong danh sách đúng bằng các task đọc được từng cái (22 ms)
+    √ [C1] charlie: task trong danh sách đúng bằng các task đọc được từng cái (25 ms)
+    √ [C1] erin: task trong danh sách đúng bằng các task đọc được từng cái (22 ms)
+    √ [C1] dana: task trong danh sách đúng bằng các task đọc được từng cái (20 ms)
+    √ [C2] Danh sách theo từng người: không ai thấy task ngoài phạm vi (18 ms)
+    √ [C3] Sau khi bị gỡ khỏi project, task biến mất khỏi cả check lẫn list (9 ms)
+
+PASS test/v2.rbac.test.js
+  V2 - permission matrix theo role trong project
+    √ [M1] Viewer đọc task -> allow=true (7 ms)
+    √ [O5] Viewer sửa task -> allow=false (13 ms)
+    √ [M2] Viewer xóa project -> allow=false (6 ms)
+    √ [M3] Viewer quản lý thành viên -> allow=false (6 ms)
+    √ [M4] Member đọc task -> allow=true (5 ms)
+    √ [M5] Member sửa task -> allow=true (6 ms)
+    √ [O6] Member xóa project -> allow=false (5 ms)
+    √ [O7] Member quản lý thành viên -> allow=false (5 ms)
+    √ [M6] Owner đọc task -> allow=true (5 ms)
+    √ [M7] Owner sửa task -> allow=true (4 ms)
+    √ [O8] Owner xóa project -> allow=true (5 ms)
+    √ [O9] Owner quản lý thành viên -> allow=true (5 ms)
+  V2 - role không lấy từ request
+    √ [O10] Bob tự gửi role=Admin (body, header, query) để xóa project -> 403 (6 ms)
+    √ [E12] Member tự thêm mình làm Owner -> 403, role vẫn là Member (6 ms)
+    √ [E10] Owner mời thành viên với role không có trong hệ thống (Admin) -> 400 (7 ms)
+  V2 - quản lý thành viên và thu hồi quyền
+    √ [E5] Owner gỡ Bob khỏi Alpha -> Bob mất quyền đọc A1 ngay lập tức (14 ms)
+    √ [E13] Member gỡ thành viên khác -> 403, Vera vẫn còn trong project (5 ms)
+    √ [E11] Không gỡ được Owner cuối cùng của project -> 409 (5 ms)
+    √ [E14] Owner Beta không quản lý được thành viên project Alpha -> 404 (5 ms)
+  V2 - PATCH chỉ nhận field được phép
+    √ [E9] Owner gửi projectId/id trong body -> bị bỏ qua, task vẫn thuộc Alpha (5 ms)
+    √ [E15] Status ngoài Open/Closed -> 400 (7 ms)
+
+PASS test/v1.idor.test.js
+  V1 - object-level authorization khi đọc task
+    √ [O1] Anonymous đọc A1 -> 401 (5 ms)
+    √ [O2] Alice đọc A1 (cùng project) -> 200 (5 ms)
+    √ [O3] Alice đọc B1 (project Beta) -> 404, không lộ nội dung (5 ms)
+    √ [O4] Charlie đọc B1 (Owner Beta) -> 200 (5 ms)
+    √ [E1] Token của Alice đã hết hạn -> 401 (5 ms)
+    √ [E2] Task không tồn tại -> 404, body giống hệt khi bị che (không dò được ID) (10 ms)
+    √ [E4] Alice đọc danh sách task của project Beta -> 404 (entry point thứ hai) (6 ms)
+    √ [E4b] Alice đọc danh sách task của project Alpha -> 200, chỉ có task Alpha (5 ms)
+    √ [E6] Bob tự khai userId=charlie (query, header, body) vẫn không đọc được B1 (11 ms)
+    √ [E7] Token chỉ có scope tasks:read: đọc được A1 nhưng vẫn không đọc được B1 (10 ms)
+    √ [E8] Token thiếu scope tasks:read -> 403 insufficient_scope dù Alice là Owner (5 ms)
+
+PASS test/v3.rebac-abac.test.js
+  V3 - Member chỉ sửa task được giao cho mình khi task còn Open
+    √ [O11] Bob sửa A1 (giao cho Bob, Open) -> 200 (14 ms)
+    √ [O12] Bob sửa A2 (chưa được giao) -> 403, A2 không đổi (7 ms)
+    √ [O13] Bob sửa A1 khi A1 đã Closed -> 403 (5 ms)
+    √ [O14] Bob sửa B1 (project khác) -> 404 (6 ms)
+  V3 - điều kiện lấy từ dữ liệu đang lưu, không lấy từ body
+    √ [E3] Bob gửi assignee=bob để sửa A2 -> 403, A2 vẫn chưa giao (6 ms)
+    √ [E16] Bob đóng A1 được, nhưng gửi status=Open để mở lại thì bị từ chối (10 ms)
+  V3 - kết hợp RBAC, ReBAC và ABAC
+    √ [E17] Owner sửa A2 dù không được giao -> 200 (điều kiện assignee chỉ áp cho Member) (5 ms)
+    √ [E18] Owner mở lại task đã đóng -> 200 (5 ms)
+    √ [E20] Viewer được giao task vẫn không sửa được -> 403 (assignee không thay role) (5 ms)
+    √ [E21] Bob vẫn là assignee của A1 nhưng đã bị gỡ khỏi project -> 404 (cần quan hệ member) (5 ms)
+
+PASS test/v4.tenant.test.js
+  V4 - Admin tenant Alpha không vượt tenant boundary
+    √ [O15] Dana (Admin tenant Alpha) đọc A1 -> 200 (11 ms)
+    √ [O16] Dana đọc B1 (tenant Beta) -> 404 (12 ms)
+    √ [O17] Dana đọc B1 với header X-Tenant-Id: beta -> 404 (18 ms)
+    √ [E22] Dana gửi tenantId=beta trong query và body -> 404 (19 ms)
+    √ [E23] Dana xem danh sách hoặc xóa project Beta -> 404, Beta vẫn còn (14 ms)
+  V4 - quyền Admin bên trong tenant của mình
+    √ [E24] Dana quản lý thành viên project Alpha dù không phải member -> 201 (7 ms)
+  V4 - dữ liệu thành viên không vượt tenant
+    √ [E25] Membership chéo tenant (dữ liệu lỗi) vẫn bị chặn bởi tenant boundary -> 404 (7 ms)
+    √ [E26] Owner Alpha thêm user của tenant Beta vào project -> 400 (19 ms)
+
+PASS test/demo.test.js
+  Server demo tách biệt khỏi app chính
+    √ [S1] App chính không có /dev/token: không token -> 401, có token -> 404 (52 ms)
+    √ [S2] Request qua server demo vẫn đi qua đúng phân quyền của app thật (41 ms)
+    √ [S4] /dev/audit trả lý do của PDP cho trang demo; Swagger UI và đặc tả được phục vụ (59 ms)
+    √ [S3] /dev/reset đưa dữ liệu về seed (10 ms)
+
+PASS test/policy.unit.test.js
+  PDP decide() - lý do của từng nhánh
+    √ [U1] charlie task:read trên A1 -> allow=false (other_tenant) (2 ms)
+    √ [U1] dana project:delete trên A1 -> allow=true (tenant_admin) (2 ms)
+    √ [U1] erin task:read trên A1 -> allow=false (not_member) (1 ms)
+    √ [U1] vera task:edit trên A1 -> allow=false (role_lacks_permission) (1 ms)
+    √ [U1] bob task:edit trên A2 -> allow=false (not_assignee) (1 ms)
+    √ [U1] alice member:manage trên A1 -> allow=true (role:Owner) (1 ms)
+    √ [U2] Member sửa task đã đóng -> task_closed (1 ms)
+    √ [U3] Role lạ "Admin" trong dữ liệu thành viên không có quyền nào (deny by default) (1 ms)
+    √ [U3] Role lạ "__proto__" trong dữ liệu thành viên không có quyền nào (deny by default) (1 ms)
+    √ [U3] Role lạ "constructor" trong dữ liệu thành viên không có quyền nào (deny by default) (1 ms)
+    √ [U3] Role lạ "toString" trong dữ liệu thành viên không có quyền nào (deny by default) (1 ms)
+    √ [U5] Member sửa nhưng thiếu dữ liệu task -> từ chối (fail closed) (1 ms)
+    √ [U4] Action chưa khai báo trong policy bị từ chối, kể cả với Owner (1 ms)
 
 --------------------|---------|----------|---------|---------|-------------------
 File                | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 --------------------|---------|----------|---------|---------|-------------------
-All files           |   96.94 |    86.84 |   98.55 |   98.86 |                   
- src                |   96.77 |    89.58 |   97.77 |   97.64 |                   
-  app.js            |   82.35 |    57.14 |      50 |    87.5 | 19-20             
-  auth.js           |   95.45 |    88.23 |     100 |     100 | 30-33             
-  db.js             |     100 |      100 |     100 |     100 |                   
+All files           |   96.07 |    84.61 |   98.63 |   98.46 |                   
+ src                |   96.17 |    87.14 |   98.07 |   97.27 |                   
+  app.js            |    90.9 |    71.42 |     100 |      90 | 28-29             
+  audit.js          |      95 |    81.25 |     100 |     100 | 17-18,39          
+  auth.js           |    92.3 |    80.95 |     100 |   95.65 | 7                 
+  db.js             |   97.61 |      100 |      96 |     100 |                   
   errors.js         |     100 |      100 |     100 |     100 |                   
   policy.js         |     100 |      100 |     100 |     100 |                   
  src/routes         |     100 |      100 |     100 |     100 |                   
   projects.js       |     100 |      100 |     100 |     100 |                   
   tasks.js          |     100 |      100 |     100 |     100 |                   
- src/services       |   95.58 |    82.14 |     100 |     100 |                   
-  access.js         |   93.75 |     87.5 |     100 |     100 | 15                
-  projectService.js |   92.85 |       80 |     100 |     100 | 14,22-31          
-  taskService.js    |     100 |       80 |     100 |     100 | 32                
- test               |     100 |      100 |     100 |     100 |                   
-  helpers.js        |     100 |      100 |     100 |     100 |                   
+ src/services       |   94.52 |    79.41 |     100 |     100 |                   
+  access.js         |   90.47 |       80 |     100 |     100 | 15-22             
+  projectService.js |   92.85 |    78.94 |     100 |     100 | 21,27,29-39       
+  taskService.js    |     100 |       80 |     100 |     100 | 47                
 --------------------|---------|----------|---------|---------|-------------------
-Test Suites: 6 passed, 6 total
-Tests:       70 passed, 70 total
+Test Suites: 8 passed, 8 total
+Tests:       84 passed, 84 total
 Snapshots:   0 total
-Time:        2.152 s, estimated 3 s
+Time:        3.44 s, estimated 23 s
 Ran all test suites.

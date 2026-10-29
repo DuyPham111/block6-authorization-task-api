@@ -1,0 +1,19 @@
+<section id="decide" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Giải pháp · Policy</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Thứ tự quyết định trong decide()</h2>
+</div>
+<table style="font-size:30px;color:#1B2430">
+<tr style="background:#ECE7DC"><th style="width:8%">#</th><th style="width:42%">Kiểm tra</th><th style="width:20%">Mô hình</th><th style="width:14%">Sai thì</th><th style="width:16%">Test</th></tr>
+<tr><td>1</td><td>Tenant người gọi = tenant project</td><td>Tenant boundary</td><td style="color:#A3480A">404</td><td>O3, O16, O17</td></tr>
+<tr><td>2</td><td>Là Admin của tenant</td><td>Role cấp tenant</td><td style="color:#1F5FA8">Cho phép</td><td>O15, E24</td></tr>
+<tr><td>3</td><td>Là thành viên project</td><td>ReBAC</td><td style="color:#A3480A">404</td><td>E5, E21</td></tr>
+<tr><td>4</td><td>Role có permission cho action</td><td>RBAC</td><td style="color:#A3480A">403</td><td>O5, O6, O7</td></tr>
+<tr><td>5</td><td>Member sửa: assignee là mình, status Open</td><td>ABAC</td><td style="color:#A3480A">403</td><td>O12, O13</td></tr>
+<tr><td>6</td><td>Còn lại</td><td></td><td style="color:#1F5FA8">Cho phép</td><td>O2, O11</td></tr>
+</table>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Không khớp nhánh nào thì từ chối. Tenant, role, assignee, status đều đọc từ DB, không đọc từ request.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · src/policy.js</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">05</p>
+<aside>Đây là toàn bộ chính sách, sau khi xong V4. Thứ tự có ý nghĩa. Tenant đứng đầu vì là ranh giới cứng, kể cả Admin cũng không vượt được. Bước ReBAC trước RBAC để xác định người gọi có được biết resource tồn tại không: người ngoài nhận 404, người trong project mà thiếu quyền nhận 403. ABAC đứng cuối vì cần dữ liệu của task cụ thể. Mọi giá trị đều đọc từ DB. Role lạ hoặc action chưa khai báo thì bị từ chối, có unit test U3 và U4. Mỗi dòng đều có test tương ứng ở cột cuối. Ở bản cuối, Alice đọc B1 bị chặn ngay ở bước 1 vì Beta thuộc tenant khác; ở V1 đến V3 chưa có tenant thì bước 3 chặn. Mỗi quyết định ghi lý do vào audit log, client chỉ thấy 404 chung.</aside>
+</section>

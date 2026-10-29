@@ -1,0 +1,23 @@
+<section id="tradeoffs" data-transition="fade" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#A3480A">Tóm tắt</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Các lựa chọn của nhóm</h2>
+</div>
+<table style="font-size:24px;color:#1B2430">
+<tr style="background:#ECE7DC"><th style="width:18%">Hạng mục</th><th style="width:36%">Nhóm chọn</th><th style="width:46%">Thay vì</th></tr>
+<tr><td>Ngôn ngữ</td><td style="color:#1F5FA8">Node 22 + Express 5 + JSDoc checkJs</td><td style="color:#A3480A">TypeScript + tsx, Spring Boot, NestJS, FastAPI</td></tr>
+<tr><td>Token</td><td style="color:#1F5FA8">JWT sub + scope, quyền đọc từ DB</td><td style="color:#A3480A">Role trong JWT, opaque, ES256 + JWKS</td></tr>
+<tr><td>Mô hình</td><td style="color:#1F5FA8">RBAC + ReBAC + ABAC + tenant</td><td style="color:#A3480A">ACL, chỉ RBAC, chỉ ABAC</td></tr>
+<tr><td>PDP</td><td style="color:#1F5FA8">Hàm thuần decide()</td><td style="color:#A3480A">OPA, Casbin, OpenFGA</td></tr>
+<tr><td>PEP</td><td style="color:#1F5FA8">Service layer</td><td style="color:#A3480A">Controller, middleware, gateway, frontend</td></tr>
+<tr><td>Dữ liệu</td><td style="color:#1F5FA8">In-memory + data/seed.json</td><td style="color:#A3480A">PostgreSQL, node:sqlite, MongoDB</td></tr>
+<tr><td>Kiểm thử</td><td style="color:#1F5FA8">Jest + Supertest, đỏ/xanh theo tag</td><td style="color:#A3480A">Postman, chỉ unit test</td></tr>
+<tr><td>Tài liệu API</td><td style="color:#1F5FA8">OpenAPI 3.1 + Swagger UI</td><td style="color:#A3480A">swagger-jsdoc, Postman, Redoc</td></tr>
+<tr><td>Logging</td><td style="color:#1F5FA8">Audit JSON Lines, AUDIT_LOG</td><td style="color:#A3480A">ELK trong lab, winston, pino</td></tr>
+<tr><td>Triển khai</td><td style="color:#1F5FA8">npm + Docker alpine non-root</td><td style="color:#A3480A">Image đầy đủ, root, PM2, Kubernetes</td></tr>
+<tr><td>Demo</td><td style="color:#1F5FA8">HTML thuần, server 127.0.0.1</td><td style="color:#A3480A">React/Vue, /dev trong app chính</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §5</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">26</p>
+<aside>Bảng tóm tắt 11 lựa chọn vừa trình bày, khớp với mục 5 của REPORT.md. Cột giữa là thứ nhóm chọn, cột phải là các phương án đã cân nhắc và loại. Hai mục tiêu xuyên suốt: thấy rõ cơ chế để bảo vệ được trước thầy, và chứng minh bằng test để không phải tin lời. Mỗi dòng đều có test hoặc evidence đi kèm trong REPORT.md.</aside>
+</section>

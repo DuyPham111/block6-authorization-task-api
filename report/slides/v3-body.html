@@ -1,0 +1,24 @@
+<section id="v3-body" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V3 · Không tin request</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Điều kiện lấy từ dữ liệu đang lưu</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#F6E0C8;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Nếu kiểm sau khi áp dụng body</p>
+<p style="font-size:30px;line-height:1.4">Bob gửi <b>assignee=bob</b>: tự giao A2 cho mình rồi sửa</p>
+<p style="font-size:30px;line-height:1.4">Bob gửi <b>status=Open</b>: tự mở lại task đã đóng</p>
+<p style="font-size:30px;line-height:1.4">Client tự đặt điều kiện để qua kiểm tra</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#DCE6F2;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Bài làm: kiểm trước, whitelist sau</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5">const r = loadTask(taskId)&#160;&#160;// từ DB<br>enforce(user, 'task:edit', r)<br>const patch = pick(body, EDITABLE)</p>
+<p style="font-size:30px;line-height:1.4">E3: 403, A2 vẫn chưa giao</p>
+<p style="font-size:30px;line-height:1.4">E16: 403, A1 vẫn Closed</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Server giữ assignee và status. Request chỉ mang thay đổi muốn áp dụng, và chỉ với title, description, status.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · src/services/taskService.js</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">10</p>
+<aside>Một chi tiết quan trọng của V3: thứ tự trong updateTask. Nếu áp dụng body rồi mới kiểm điều kiện, Bob chỉ cần gửi assignee=bob là tự giao task cho mình, hoặc gửi status=Open là tự mở lại task đã đóng. Em kiểm quyền trên bản ghi đang lưu trong DB trước, sau đó mới lấy các field cho phép từ body. Test E3 và E16 chứng minh hai cách tấn công này đều bị chặn, và dữ liệu không đổi. Nếu thầy hỏi về race condition giữa kiểm và ghi: trong bài, dữ liệu in-memory và Node chạy tuần tự nên không xen được. Với DB thật, em sẽ dùng UPDATE có điều kiện WHERE assignee và status, hoặc transaction. Đó là nội dung Block 7.</aside>
+</section>

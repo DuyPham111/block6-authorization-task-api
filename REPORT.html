@@ -1,0 +1,1192 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REPORT — Block 6: Authorization &amp; Access Control · Nhóm 07</title>
+<meta name="description" content="Báo cáo dạng slide của Nhóm 07, Block 6: kiểm quyền trên từng resource cho Task Management API (IDOR/BOLA, RBAC, ReBAC, ABAC, tenant boundary), kèm giải thích từng lựa chọn của nhóm.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root { --s: .5; --ink: #1B2430; --paper: #F6F4EF; --line: #D9D2C3; --muted: #5B616B; --blue: #1F5FA8; --bar: 52px }
+* { box-sizing: border-box }
+html, body { margin: 0 }
+body { background: #E9E5DC; color: var(--ink); font: 16px/1.5 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif }
+a { color: var(--blue) }
+.bar { position: sticky; top: 0; z-index: 10; height: var(--bar); display: flex; align-items: center; gap: 10px; padding: 0 16px; background: var(--ink); color: #F3EFE6 }
+.bar .title { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0 }
+.bar button, .bar select { font: inherit; font-size: 14px; color: #F3EFE6; background: #2A3544; border: 1px solid #3A4656; border-radius: 6px; padding: 5px 10px; cursor: pointer }
+.bar select { max-width: 340px }
+.bar button:hover, .bar select:hover { border-color: #8DB8E8 }
+.bar button:focus-visible, .bar select:focus-visible { outline: 3px solid #8DB8E8; outline-offset: 2px }
+.bar .count { font-variant-numeric: tabular-nums; font-size: 14px; color: #B9C0CC; white-space: nowrap }
+#deck { padding: 24px 16px 64px }
+.intro { max-width: 1200px; margin: 0 auto 32px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 24px 28px }
+.intro h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.25 }
+.intro p { margin: 8px 0 }
+.intro ol { margin: 8px 0 0; padding-left: 20px; columns: 2; column-gap: 32px }
+.intro ol ol { columns: 1; padding-left: 20px; margin: 4px 0 10px }
+.doc-section { max-width: 1200px; margin: 40px auto 12px; font-size: 22px; color: var(--muted); border-bottom: 2px solid var(--line); padding-bottom: 6px }
+.slide { max-width: 1200px; margin: 0 auto 32px }
+.doc-title { margin: 0 0 8px; font-size: 18px }
+.doc-title span { display: inline-block; min-width: 2em; color: var(--muted) }
+.frame { position: relative; width: calc(1920px * var(--s)); height: calc(1080px * var(--s)); overflow: hidden; border-radius: 10px; box-shadow: 0 2px 10px rgba(27,36,48,.18); background: #fff; margin: 0 auto }
+.canvas { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform: scale(var(--s)); transform-origin: 0 0 }
+.notes { margin: 10px 0 0; background: var(--paper); border-left: 4px solid var(--blue); border-radius: 6px; padding: 12px 16px; font-size: 15px; line-height: 1.6 }
+
+/* Mặc định của định dạng slide */
+.canvas section { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden }
+.canvas section * { margin: 0 }
+.canvas h1 { font-size: 96px; font-weight: 600; line-height: 1.1 }
+.canvas h2 { font-size: 64px; font-weight: 600; line-height: 1.15 }
+.canvas h3 { font-size: 44px; font-weight: 600; line-height: 1.2 }
+.canvas p { font-size: 32px; line-height: 1.4 }
+.canvas ol, .canvas ul { padding-left: 1.3em }
+.canvas table { border-collapse: collapse; width: 100% }
+.canvas th, .canvas td { padding: .35em .6em; border-bottom: 1px solid rgba(27,36,48,.18); text-align: left; vertical-align: top }
+.canvas th { font-weight: 700 }
+x-shape { display: block; flex: none }
+x-shape[kind="arrow-right"] { clip-path: polygon(0 30%, 60% 30%, 60% 0, 100% 50%, 60% 100%, 60% 70%, 0 70%) }
+svg.x-icon { display: block; flex: none }
+
+/* Chế độ trình chiếu (bật bằng JavaScript) */
+body.present { overflow: hidden; background: #11161E }
+body.present .intro, body.present .doc-section, body.present .doc-title, body.present .notes { display: none }
+body.present #deck { padding: 0; height: calc(100vh - var(--bar)); display: flex; align-items: center; justify-content: center }
+body.present .slide { display: none; margin: 0; max-width: none }
+body.present .slide.active { display: block }
+body.present .frame { border-radius: 0; box-shadow: none }
+#notesPanel { display: none }
+body.present.show-notes #notesPanel { display: block; position: fixed; left: 0; right: 0; bottom: 0; max-height: 34vh; overflow: auto; background: rgba(17,22,30,.95); color: #E6E9EE; padding: 14px 20px; font-size: 16px; line-height: 1.6; border-top: 1px solid #3A4656 }
+.doc-only { display: block }
+body.present .doc-only { display: none }
+
+@media print {
+  .bar, #notesPanel { display: none !important }
+  body { background: #fff }
+  body.present { overflow: visible }
+  body.present #deck { display: block; height: auto }
+  body.present .slide, .slide { display: block !important; break-inside: avoid; page-break-inside: avoid; margin-bottom: 16px }
+  body.present .intro, body.present .doc-section, body.present .doc-title, body.present .notes { display: block }
+  .frame { box-shadow: none; border: 1px solid #ccc }
+}
+@media (max-width: 760px) {
+  .bar .title { display: none }
+  .bar select { max-width: 150px }
+  .intro ol { columns: 1 }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="title">REPORT · Block 6 · Authorization &amp; Access Control · Nhóm 07</div>
+  <button id="prev" type="button" aria-label="Slide trước" hidden>←</button>
+  <select id="toc" aria-label="Chọn slide" hidden><optgroup label="Vấn đề: token hợp lệ nhưng server không kiểm quyền trên từng object"><option value="1">1. Authorization &amp; Access Control</option><option value="2">2. Token hợp lệ vẫn lộ dữ liệu người khác</option><option value="3">3. Ba lớp kiểm tra của một request</option></optgroup><optgroup label="Giải pháp: PEP/PDP và bốn phiên bản V1 đến V4"><option value="4">4. Kiểm quyền ở service, quyết định ở PDP</option><option value="5">5. Thứ tự quyết định trong decide()</option><option value="6">6. V1: kiểm quyền trên từng object</option><option value="7">7. 401, 403 hay 404?</option><option value="8">8. V2: RBAC trong phạm vi project</option><option value="9">9. V3: ba lớp, mỗi lớp một câu hỏi</option><option value="10">10. Điều kiện lấy từ dữ liệu đang lưu</option><option value="11">11. V4: tenant boundary đứng trước Admin</option><option value="12">12. Check và list: hai đường, một luật</option></optgroup><optgroup label="Evidence: test đỏ trước, xanh sau, và kiểm tra ngược bản từ chối hết"><option value="13">13. Test oracle qua từng phiên bản</option><option value="14">14. Kiểm tra ngược · bản sửa “từ chối hết”</option></optgroup><optgroup label="Các lựa chọn của nhóm: chọn gì, không chọn gì, vì sao, đánh đổi chấp nhận"><option value="15">15. Node.js 22 + Express 5, kiểm kiểu JSDoc</option><option value="16">16. JWT chỉ có sub + scope, quyền đọc từ DB</option><option value="17">17. RBAC + ReBAC + ABAC, có tenant boundary</option><option value="18">18. Một hàm thuần decide() thay vì engine</option><option value="19">19. Kiểm quyền ở service, không ở controller</option><option value="20">20. In-memory, dataset ở data/seed.json</option><option value="21">21. Jest + Supertest, đỏ trước xanh sau</option><option value="22">22. OpenAPI 3.1 + Swagger UI, khớp route</option><option value="23">23. Audit log JSON Lines, lý do chỉ ở server</option><option value="24">24. npm hoặc Docker alpine, không chạy root</option><option value="25">25. HTML thuần trên server demo riêng</option></optgroup><optgroup label="Tóm tắt lựa chọn, giới hạn và cách demo"><option value="26">26. Các lựa chọn của nhóm</option><option value="27">27. Giới hạn và hướng mở rộng</option><option value="28">28. Demo: chạy lại mọi evidence</option></optgroup><optgroup label="Câu hỏi kết thúc và hỏi đáp"><option value="29">29. Trả lời câu hỏi kết thúc</option><option value="30">30. Cảm ơn thầy và các bạn</option></optgroup></select>
+  <span class="count" id="count" hidden></span>
+  <button id="next" type="button" aria-label="Slide sau" hidden>→</button>
+  <button id="notesBtn" type="button" title="Phím N" hidden>Ghi chú</button>
+  <button id="modeBtn" type="button" title="Phím D" hidden>Đọc tài liệu</button>
+  <button id="fsBtn" type="button" title="Phím F" hidden>Toàn màn hình</button>
+</header>
+<main id="deck">
+<section class="intro doc-only">
+  <h1>REPORT — Block 6: Authorization &amp; Access Control cho Task Management API</h1>
+  <p><b>Nhóm 07</b> · 23127045 · 23127102 · 23127159 · 23127183 · 23127393</p>
+  <p>Bộ slide báo cáo gồm 30 slide. Mỗi slide có phần <b>giải thích</b> bên dưới; phần "Các lựa chọn của nhóm" trình bày từng quyết định theo khung <i>Nhóm chọn vì / Không chọn / Đánh đổi chấp nhận</i>. Báo cáo chi tiết: <a href="REPORT.md">REPORT.md</a> · Hướng dẫn triển khai: <a href="README.md">README.md</a> · Đối chiếu đề: <a href="AUDIT.md">AUDIT.md</a> · Evidence: <a href="EVIDENCE.md">EVIDENCE.md</a>.</p>
+  <p>Trình chiếu: bấm <b>Trình chiếu</b> trên thanh trên cùng, dùng phím ← → để chuyển slide, <b>N</b> bật ghi chú, <b>F</b> toàn màn hình, <b>D</b> quay lại chế độ đọc. In ra PDF: Ctrl+P ở chế độ đọc.</p>
+  <ol><li><b>Vấn đề: token hợp lệ nhưng server không kiểm quyền trên từng object</b><ol><li value="1"><a href="#1">Authorization &amp; Access Control</a></li><li value="2"><a href="#2">Token hợp lệ vẫn lộ dữ liệu người khác</a></li><li value="3"><a href="#3">Ba lớp kiểm tra của một request</a></li></ol></li><li><b>Giải pháp: PEP/PDP và bốn phiên bản V1 đến V4</b><ol><li value="4"><a href="#4">Kiểm quyền ở service, quyết định ở PDP</a></li><li value="5"><a href="#5">Thứ tự quyết định trong decide()</a></li><li value="6"><a href="#6">V1: kiểm quyền trên từng object</a></li><li value="7"><a href="#7">401, 403 hay 404?</a></li><li value="8"><a href="#8">V2: RBAC trong phạm vi project</a></li><li value="9"><a href="#9">V3: ba lớp, mỗi lớp một câu hỏi</a></li><li value="10"><a href="#10">Điều kiện lấy từ dữ liệu đang lưu</a></li><li value="11"><a href="#11">V4: tenant boundary đứng trước Admin</a></li><li value="12"><a href="#12">Check và list: hai đường, một luật</a></li></ol></li><li><b>Evidence: test đỏ trước, xanh sau, và kiểm tra ngược bản từ chối hết</b><ol><li value="13"><a href="#13">Test oracle qua từng phiên bản</a></li><li value="14"><a href="#14">Kiểm tra ngược · bản sửa “từ chối hết”</a></li></ol></li><li><b>Các lựa chọn của nhóm: chọn gì, không chọn gì, vì sao, đánh đổi chấp nhận</b><ol><li value="15"><a href="#15">Node.js 22 + Express 5, kiểm kiểu JSDoc</a></li><li value="16"><a href="#16">JWT chỉ có sub + scope, quyền đọc từ DB</a></li><li value="17"><a href="#17">RBAC + ReBAC + ABAC, có tenant boundary</a></li><li value="18"><a href="#18">Một hàm thuần decide() thay vì engine</a></li><li value="19"><a href="#19">Kiểm quyền ở service, không ở controller</a></li><li value="20"><a href="#20">In-memory, dataset ở data/seed.json</a></li><li value="21"><a href="#21">Jest + Supertest, đỏ trước xanh sau</a></li><li value="22"><a href="#22">OpenAPI 3.1 + Swagger UI, khớp route</a></li><li value="23"><a href="#23">Audit log JSON Lines, lý do chỉ ở server</a></li><li value="24"><a href="#24">npm hoặc Docker alpine, không chạy root</a></li><li value="25"><a href="#25">HTML thuần trên server demo riêng</a></li></ol></li><li><b>Tóm tắt lựa chọn, giới hạn và cách demo</b><ol><li value="26"><a href="#26">Các lựa chọn của nhóm</a></li><li value="27"><a href="#27">Giới hạn và hướng mở rộng</a></li><li value="28"><a href="#28">Demo: chạy lại mọi evidence</a></li></ol></li><li><b>Câu hỏi kết thúc và hỏi đáp</b><ol><li value="29"><a href="#29">Trả lời câu hỏi kết thúc</a></li><li value="30"><a href="#30">Cảm ơn thầy và các bạn</a></li></ol></li></ol>
+</section>
+<h2 class="doc-section">Vấn đề: token hợp lệ nhưng server không kiểm quyền trên từng object</h2>
+<figure class="slide" id="slide-1" data-n="1" data-title="Authorization &amp; Access Control">
+<h3 class="doc-title"><span>1</span> Authorization &amp; Access Control</h3>
+<div class="frame"><div class="canvas">
+<section id="cover" data-transition="fade" style="background:#1B2430;color:#F3EFE6;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:space-between">
+<p style="font-size:30px;font-weight:600;color:#F0A35E;letter-spacing:2px;text-transform:uppercase">Web Nâng Cao · Tuần 4 · Block 6</p>
+<div style="display:flex;flex-direction:column;gap:32px">
+<h1 style="font-size:96px;font-weight:700;line-height:1.05;letter-spacing:-2px">Authorization &amp; Access Control</h1>
+<p style="font-size:40px;line-height:1.3;color:#B9C0CC">Task Management API: kiểm quyền trên từng resource tại server, chứng minh bằng automated test</p>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:end;gap:48px">
+<p style="font-size:30px;color:#F3EFE6">Nhóm 07 · 23127045 · 23127102 · 23127159 · 23127183 · 23127393</p>
+<p style="font-size:30px;color:#8DB8E8;text-align:right">17/17 oracle · 84/84 test</p>
+</div>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Chào thầy và các bạn. Bài của em là Block 6: Authorization và Access Control trên Task Management API. Ứng dụng có sẵn đăng nhập. Phần em làm là kiểm quyền trên từng resource tại server, và chứng minh bằng test: 17/17 test oracle của đề, tổng cộng 84 test. Bài trình bày theo năm phần: vấn đề, giải pháp qua bốn phiên bản V1 đến V4, evidence, 11 lựa chọn của nhóm kèm lý do, rồi tóm tắt và hỏi đáp.</figcaption>
+</figure>
+<figure class="slide" id="slide-2" data-n="2" data-title="Token hợp lệ vẫn lộ dữ liệu người khác">
+<h3 class="doc-title"><span>2</span> Token hợp lệ vẫn lộ dữ liệu người khác</h3>
+<div class="frame"><div class="canvas">
+<section id="problem" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#A3480A">Vấn đề</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Token hợp lệ vẫn lộ dữ liệu người khác</h2>
+</div>
+<div style="display:flex;gap:48px;flex:1">
+<div style="flex:3;display:flex;flex-direction:column;gap:20px;background:#1B2430;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#B9C0CC">$ curl /tasks/A1 -H "Bearer &lt;token Alice&gt;"</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#8DB8E8">HTTP/1.1 200 OK · task của project Alpha</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#B9C0CC">$ curl /tasks/B1 -H "Bearer &lt;token Alice&gt;"</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F0A35E">HTTP/1.1 200 OK · lộ dữ liệu project Beta</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F3EFE6">{"id":"B1","projectId":"beta",<br>&#160;"title":"Kế hoạch ra mắt Beta",<br>&#160;"description":"Dữ liệu nội bộ của project Beta"}</p>
+</div>
+<div style="flex:2;display:flex;flex-direction:column;gap:24px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.2">Ba điều kiện của IDOR/BOLA</h3>
+<ol style="font-size:30px;line-height:1.4;color:#1B2430">
+<li>Client gửi object ID</li>
+<li>Token hợp lệ nên qua xác thực</li>
+<li>Server không kiểm quan hệ giữa người gọi và object</li>
+</ol>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Alice không thuộc project Beta. Starter chỉ kiểm token và scope.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">02</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Đây là lỗi ban đầu, em chạy thật bằng curl, output nằm trong docs/evidence/v1-idor-curl-before.txt. Alice là Owner của Alpha, token hoàn toàn hợp lệ. Alice đọc A1 thì đúng. Nhưng chỉ cần đổi ID thành B1 là đọc được dữ liệu nội bộ của project Beta. Đủ ba điều kiện của IDOR/BOLA: ID do client gửi, token hợp lệ, và server không kiểm quan hệ giữa người gọi với object. Thông điệp chính: xác thực đúng không có nghĩa là được phép.</figcaption>
+</figure>
+<figure class="slide" id="slide-3" data-n="3" data-title="Ba lớp kiểm tra của một request">
+<h3 class="doc-title"><span>3</span> Ba lớp kiểm tra của một request</h3>
+<div class="frame"><div class="canvas">
+<section id="layers" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#A3480A">Vấn đề</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Ba lớp kiểm tra của một request</h2>
+</div>
+<div style="display:flex;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#5B616B">Lớp 1</p>
+<h3 style="font-size:40px;font-weight:700;line-height:1.15">Authentication</h3>
+<p style="font-size:30px;line-height:1.4">Người gọi là ai?</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.4;color:#5B616B">JWT: chữ ký, exp, sub</p>
+<div style="flex:1"></div>
+<p style="font-size:24px;font-weight:600;color:#1F5FA8;background:#DCE6F2;padding:8px 16px;border-radius:8px">Thiếu, sai, hết hạn → 401</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:48px;height:24px;background:#9AA0A8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#5B616B">Lớp 2</p>
+<h3 style="font-size:40px;font-weight:700;line-height:1.15">OAuth2 scope</h3>
+<p style="font-size:30px;line-height:1.4">Token được cấp loại quyền gì?</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.4;color:#5B616B">scope = tasks:read</p>
+<div style="flex:1"></div>
+<p style="font-size:24px;font-weight:600;color:#1F5FA8;background:#DCE6F2;padding:8px 16px;border-radius:8px">Thiếu scope → 403 insufficient_scope</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:48px;height:24px;background:#9AA0A8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBFAF7;border:3px solid #A3480A;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#A3480A">Lớp 3 · starter thiếu</p>
+<h3 style="font-size:40px;font-weight:700;line-height:1.15">Authorization</h3>
+<p style="font-size:30px;line-height:1.4">Được làm action này trên resource này không?</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.4;color:#5B616B">membership, role, assignee, status, tenant</p>
+<div style="flex:1"></div>
+<p style="font-size:24px;font-weight:600;color:#9A3F07;background:#F6E0C8;padding:8px 16px;border-radius:8px">Không được phép → 403 hoặc 404</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Test E7: token chỉ có <b>tasks:read</b> đọc được A1 nhưng vẫn nhận 404 với B1. Scope không thay được kiểm quyền.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">03</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Mỗi request đi qua ba lớp. Lớp 1, authentication: người gọi là ai, lỗi thì 401. Lớp 2, OAuth2 scope: token được cấp loại quyền gì, thiếu thì 403 insufficient_scope theo RFC 6750. Lớp 3, authorization: người này có được làm action này trên resource cụ thể này không. Starter có lớp 1 và lớp 2 nhưng thiếu lớp 3. Test E7 cho thấy scope không thay được kiểm quyền: token chỉ có tasks:read vẫn không đọc được B1. Nếu thầy hỏi &quot;có scope rồi sao cần kiểm quyền&quot;: scope giới hạn token, kiểm quyền giới hạn người dùng trên từng object.</figcaption>
+</figure>
+<h2 class="doc-section">Giải pháp: PEP/PDP và bốn phiên bản V1 đến V4</h2>
+<figure class="slide" id="slide-4" data-n="4" data-title="Kiểm quyền ở service, quyết định ở PDP">
+<h3 class="doc-title"><span>4</span> Kiểm quyền ở service, quyết định ở PDP</h3>
+<div class="frame"><div class="canvas">
+<section id="arch" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Giải pháp · Kiến trúc</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Kiểm quyền ở service, quyết định ở PDP</h2>
+</div>
+<div style="display:flex;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:12px;padding:24px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;font-weight:600">authenticate</p>
+<p style="font-size:24px;line-height:1.3;color:#5B616B">JWT → req.user, lỗi 401</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:40px;height:20px;background:#9AA0A8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:12px;padding:24px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;font-weight:600">requireScope</p>
+<p style="font-size:24px;line-height:1.3;color:#5B616B">scope, lỗi 403</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:40px;height:20px;background:#9AA0A8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:12px;padding:24px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;font-weight:600">routes/*</p>
+<p style="font-size:24px;line-height:1.3;color:#5B616B">không import db</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:40px;height:20px;background:#9AA0A8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border:2px solid #1F5FA8;border-radius:12px;padding:24px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;font-weight:600;color:#1F5FA8">service · PEP</p>
+<p style="font-size:24px;line-height:1.3;color:#1B2430">nạp resource, enforce</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:40px;height:20px;background:#1F5FA8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#1F5FA8;border-radius:12px;padding:24px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;font-weight:600;color:#F3EFE6">policy · PDP</p>
+<p style="font-size:24px;line-height:1.3;color:#F3EFE6">decide(), hàm thuần</p>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.15">PEP · service</h3>
+<p style="font-size:30px;line-height:1.4">taskService, projectService nạp task hoặc project từ DB, gọi enforce rồi mới thao tác. Bị từ chối thì ném 403 hoặc 404.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.15">PDP · decide()</h3>
+<p style="font-size:30px;line-height:1.4">Trả về allow, visible, reason. Không biết HTTP, không ghi dữ liệu. Unit test phủ 100% nhánh.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Mọi entry point đi qua cùng một enforce: <b>GET /tasks/:id</b>, <b>GET /tasks</b>, <b>GET /projects/:id/tasks</b>, PATCH, DELETE, quản lý thành viên.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">04</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Kiến trúc em chọn. Middleware xác thực và scope có sẵn. Route chỉ chuyển request vào service và không được import db. Service là PEP: nạp resource từ DB, ví dụ project của task lấy từ task.projectId chứ không lấy từ request, rồi gọi enforce. PDP là hàm decide trong policy.js, thuần, không biết HTTP, nên unit test được từng nhánh. Lý do không đặt ở controller: cùng một task có ba đường đọc, đặt ở controller thì route nào quên là lọt. Lý do không dùng middleware: middleware chạy trước khi biết task thuộc project nào. Em đã grep để chắc chắn route không import db.</figcaption>
+</figure>
+<figure class="slide" id="slide-5" data-n="5" data-title="Thứ tự quyết định trong decide()">
+<h3 class="doc-title"><span>5</span> Thứ tự quyết định trong decide()</h3>
+<div class="frame"><div class="canvas">
+<section id="decide" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Giải pháp · Policy</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Thứ tự quyết định trong decide()</h2>
+</div>
+<table style="font-size:30px;color:#1B2430">
+<tr style="background:#ECE7DC"><th style="width:8%">#</th><th style="width:42%">Kiểm tra</th><th style="width:20%">Mô hình</th><th style="width:14%">Sai thì</th><th style="width:16%">Test</th></tr>
+<tr><td>1</td><td>Tenant người gọi = tenant project</td><td>Tenant boundary</td><td style="color:#A3480A">404</td><td>O3, O16, O17</td></tr>
+<tr><td>2</td><td>Là Admin của tenant</td><td>Role cấp tenant</td><td style="color:#1F5FA8">Cho phép</td><td>O15, E24</td></tr>
+<tr><td>3</td><td>Là thành viên project</td><td>ReBAC</td><td style="color:#A3480A">404</td><td>E5, E21</td></tr>
+<tr><td>4</td><td>Role có permission cho action</td><td>RBAC</td><td style="color:#A3480A">403</td><td>O5, O6, O7</td></tr>
+<tr><td>5</td><td>Member sửa: assignee là mình, status Open</td><td>ABAC</td><td style="color:#A3480A">403</td><td>O12, O13</td></tr>
+<tr><td>6</td><td>Còn lại</td><td></td><td style="color:#1F5FA8">Cho phép</td><td>O2, O11</td></tr>
+</table>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Không khớp nhánh nào thì từ chối. Tenant, role, assignee, status đều đọc từ DB, không đọc từ request.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · src/policy.js</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">05</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Đây là toàn bộ chính sách, sau khi xong V4. Thứ tự có ý nghĩa. Tenant đứng đầu vì là ranh giới cứng, kể cả Admin cũng không vượt được. Bước ReBAC trước RBAC để xác định người gọi có được biết resource tồn tại không: người ngoài nhận 404, người trong project mà thiếu quyền nhận 403. ABAC đứng cuối vì cần dữ liệu của task cụ thể. Mọi giá trị đều đọc từ DB. Role lạ hoặc action chưa khai báo thì bị từ chối, có unit test U3 và U4. Mỗi dòng đều có test tương ứng ở cột cuối. Ở bản cuối, Alice đọc B1 bị chặn ngay ở bước 1 vì Beta thuộc tenant khác; ở V1 đến V3 chưa có tenant thì bước 3 chặn. Mỗi quyết định ghi lý do vào audit log, client chỉ thấy 404 chung.</figcaption>
+</figure>
+<figure class="slide" id="slide-6" data-n="6" data-title="V1: kiểm quyền trên từng object">
+<h3 class="doc-title"><span>6</span> V1: kiểm quyền trên từng object</h3>
+<div class="frame"><div class="canvas">
+<section id="v1" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V1 · IDOR/BOLA</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">V1: kiểm quyền trên từng object</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#1B2430;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#F0A35E">Trước · starter</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F3EFE6">router.get('/:id', (req, res) =&gt; {<br>&#160;&#160;const task = db.findTask(req.params.id)<br>&#160;&#160;if (!task) throw notFound()<br>&#160;&#160;res.json(task)<br>})</p>
+<p style="font-size:24px;line-height:1.4;color:#B9C0CC">Chỉ hỏi "task có tồn tại không", không hỏi "Alice có liên quan không".</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#1B2430;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#8DB8E8">Sau · V1 trong taskService</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F3EFE6">function getTask(user, taskId) {<br>&#160;&#160;const resource = loadTask(taskId)<br>&#160;&#160;enforce(user, 'task:read', resource)<br>&#160;&#160;return resource.task<br>}</p>
+<p style="font-size:24px;line-height:1.4;color:#B9C0CC">Project suy ra từ task trong DB. Không phải thành viên thì 404.</p>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:32px">
+<p style="font-size:40px;font-weight:700;color:#1F5FA8">200 → 404</p>
+<p style="font-size:24px;line-height:1.4">Alice đọc B1, body giống hệt task không tồn tại</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:32px">
+<p style="font-size:40px;font-weight:700;color:#1F5FA8">5 đỏ → 11/11</p>
+<p style="font-size:24px;line-height:1.4">Test V1 chạy trên starter rồi sau khi sửa</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:32px">
+<p style="font-size:40px;font-weight:700;color:#1F5FA8">2 đường đọc</p>
+<p style="font-size:24px;line-height:1.4">/tasks/:id và /projects/:id/tasks cùng enforce</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · git diff starter v1</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">06</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> V1. Bên trái là code starter: chỉ kiểm task có tồn tại không. Bên phải là bản sửa: route gọi taskService.getTask. Service nạp task từ DB, suy ra project từ task.projectId, rồi gọi enforce với action task:read. Em không dùng middleware vì URL /tasks/B1 không có projectId, mà lấy projectId từ request là tin client. Em viết test trước, chạy trên starter thấy 5 test đỏ, sửa xong 11/11 xanh. Evidence nằm trong docs/evidence/v1-before.txt và v1-after.txt. UUID không thay được bước này, vì ID vẫn lộ qua log, email hay link chia sẻ.</figcaption>
+</figure>
+<figure class="slide" id="slide-7" data-n="7" data-title="401, 403 hay 404?">
+<h3 class="doc-title"><span>7</span> 401, 403 hay 404?</h3>
+<div class="frame"><div class="canvas">
+<section id="codes" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V1 · Quy ước mã lỗi</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">401, 403 hay 404?</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:3;display:flex;flex-direction:column">
+<table style="font-size:30px;color:#1B2430">
+<tr style="background:#ECE7DC"><th style="width:14%">Mã</th><th style="width:62%">Khi nào</th><th style="width:24%">Test</th></tr>
+<tr><td>401</td><td>Thiếu token, sai chữ ký, hết hạn</td><td>O1, E1</td></tr>
+<tr><td>403</td><td>Token thiếu scope (insufficient_scope)</td><td>E8</td></tr>
+<tr><td>403</td><td>Cùng project nhưng role hoặc điều kiện không cho phép</td><td>O5, O12</td></tr>
+<tr><td>404</td><td>Không tồn tại, hoặc ngoài project, ngoài tenant</td><td>O3, O16, E2</td></tr>
+</table>
+</div>
+<div style="flex:2;display:flex;flex-direction:column;gap:20px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.2">Vì sao 404 cho người ngoài?</h3>
+<p style="font-size:30px;line-height:1.4">403 xác nhận B1 có tồn tại, kẻ tấn công dò được ID.</p>
+<p style="font-size:30px;line-height:1.4">Body của "bị che" giống hệt "không tồn tại" (test E2).</p>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Người cùng project vẫn nhận 403 để biết lý do.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">07</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Quy ước mã lỗi. Lỗi 401 khi chưa xác thực được người gọi. Lỗi 403 có hai loại: thiếu scope, hoặc người cùng project nhưng role hay điều kiện không cho phép. Lỗi 404 khi không tồn tại, hoặc người gọi không được biết resource tồn tại. Đề chấp nhận 403 hoặc 404, nhưng em chọn 404 cho người ngoài để chống dò ID. Test E2 so body của B1 bị che với Z9 không tồn tại, hai body phải giống hệt. Test của em kiểm mã cụ thể chứ không chấp nhận cả hai, để khóa luôn quy ước này. Còn chênh lệch thời gian rất nhỏ giữa hai trường hợp: nếu cần chặt hơn thì đưa điều kiện quyền vào chính câu truy vấn.</figcaption>
+</figure>
+<figure class="slide" id="slide-8" data-n="8" data-title="V2: RBAC trong phạm vi project">
+<h3 class="doc-title"><span>8</span> V2: RBAC trong phạm vi project</h3>
+<div class="frame"><div class="canvas">
+<section id="v2" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V2 · RBAC</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">V2: RBAC trong phạm vi project</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:3;display:flex;flex-direction:column;gap:24px">
+<table style="font-size:30px;color:#1B2430">
+<tr style="background:#ECE7DC"><th style="width:20%">Role</th><th style="width:20%">Đọc task</th><th style="width:20%">Sửa task</th><th style="width:20%">Xóa project</th><th style="width:20%">Thành viên</th></tr>
+<tr><td>Viewer</td><td style="color:#1F5FA8">Được</td><td style="color:#A3480A">Không</td><td style="color:#A3480A">Không</td><td style="color:#A3480A">Không</td></tr>
+<tr><td>Member</td><td style="color:#1F5FA8">Được</td><td style="color:#1F5FA8">Được*</td><td style="color:#A3480A">Không</td><td style="color:#A3480A">Không</td></tr>
+<tr><td>Owner</td><td style="color:#1F5FA8">Được</td><td style="color:#1F5FA8">Được</td><td style="color:#1F5FA8">Được</td><td style="color:#1F5FA8">Được</td></tr>
+</table>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">* Từ V3: chỉ task được giao cho mình và còn Open. Mỗi ô là một test (M1–M7, O5–O9).</p>
+<p style="font-size:30px;line-height:1.4"><b>13 đỏ → 21/21 xanh</b> · oracle 7 → 12/17</p>
+</div>
+<div style="flex:2;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">Role lấy từ bảng thành viên</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">O10: role=Admin qua body, header, query vẫn 403</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">PATCH chỉ nhận field cho phép</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">E9: projectId, id trong body bị bỏ qua</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">Member không tự nâng quyền</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">E12: tự thêm mình làm Owner vẫn 403</p>
+</div>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · git diff v1 v2</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">08</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> V2 chặn BFLA, tức gọi chức năng vượt role bằng request trực tiếp. Role gắn với từng project chứ không phải toàn hệ thống, vì một người có thể là Owner project này và Viewer project khác. Code kiểm theo permission, ví dụ project:delete, chứ không viết if role bằng Owner, nên thêm role chỉ cần sửa một bảng. Role luôn lấy từ bảng thành viên: test O10 gửi role=Admin qua cả body, header và query, kết quả vẫn 403. PATCH chỉ nhận title, description, status để chặn mass assignment. Mỗi test từ chối đều kiểm dữ liệu không bị thay đổi. Vì sao Member không quản lý thành viên: đó là quyền cấp quyền cho người khác, có thì Member tự nâng mình lên Owner được.</figcaption>
+</figure>
+<figure class="slide" id="slide-9" data-n="9" data-title="V3: ba lớp, mỗi lớp một câu hỏi">
+<h3 class="doc-title"><span>9</span> V3: ba lớp, mỗi lớp một câu hỏi</h3>
+<div class="frame"><div class="canvas">
+<section id="v3" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V3 · ReBAC + ABAC</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">V3: ba lớp, mỗi lớp một câu hỏi</h2>
+</div>
+<table style="font-size:30px;color:#1B2430">
+<tr style="background:#ECE7DC"><th style="width:14%">Lớp</th><th style="width:40%">Câu hỏi</th><th style="width:46%">Thiếu lớp này thì</th></tr>
+<tr><td>ReBAC</td><td>Có thuộc project chứa task không?</td><td>Bob sửa được B1 của Beta (O14)</td></tr>
+<tr><td>RBAC</td><td>Role có được loại thao tác này?</td><td>Viewer sửa được task (O5)</td></tr>
+<tr><td>ABAC</td><td>Task này giao cho mình, còn Open?</td><td>Bob sửa A2 chưa giao (O12), task đã đóng (O13)</td></tr>
+</table>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3;color:#1F5FA8">E20 · Viewer được giao task vẫn 403</p>
+<p style="font-size:24px;line-height:1.4">Assignee không thay được role</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3;color:#1F5FA8">E21 · Assignee bị gỡ khỏi project: 404</p>
+<p style="font-size:24px;line-height:1.4">Assignee không thay được quan hệ thành viên</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · git diff v2 v3: 1 file, +7 dòng</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">09</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> V3 kết hợp ba mô hình, mỗi lớp trả lời một câu hỏi khác nhau. ReBAC: người gọi có quan hệ với project chứa task không. RBAC: role có được loại thao tác này không. ABAC: với task cụ thể này, có được giao cho mình và còn Open không. Hai test chứng minh không lớp nào thay được lớp khác. E20: Viewer được giao task vẫn không sửa được. E21: Bob vẫn ghi là assignee nhưng đã bị gỡ khỏi project, nên không sửa được. Nhờ PDP tách riêng, V3 chỉ thêm 7 dòng trong một file. Owner không bị ràng buộc assignee, vì Owner quản lý cả project. Quyết định này đã ghi trong bảng chính sách, có test E17 và E18.</figcaption>
+</figure>
+<figure class="slide" id="slide-10" data-n="10" data-title="Điều kiện lấy từ dữ liệu đang lưu">
+<h3 class="doc-title"><span>10</span> Điều kiện lấy từ dữ liệu đang lưu</h3>
+<div class="frame"><div class="canvas">
+<section id="v3-body" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V3 · Không tin request</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Điều kiện lấy từ dữ liệu đang lưu</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#F6E0C8;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Nếu kiểm sau khi áp dụng body</p>
+<p style="font-size:30px;line-height:1.4">Bob gửi <b>assignee=bob</b>: tự giao A2 cho mình rồi sửa</p>
+<p style="font-size:30px;line-height:1.4">Bob gửi <b>status=Open</b>: tự mở lại task đã đóng</p>
+<p style="font-size:30px;line-height:1.4">Client tự đặt điều kiện để qua kiểm tra</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#DCE6F2;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Bài làm: kiểm trước, whitelist sau</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5">const r = loadTask(taskId)&#160;&#160;// từ DB<br>enforce(user, 'task:edit', r)<br>const patch = pick(body, EDITABLE)</p>
+<p style="font-size:30px;line-height:1.4">E3: 403, A2 vẫn chưa giao</p>
+<p style="font-size:30px;line-height:1.4">E16: 403, A1 vẫn Closed</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Server giữ assignee và status. Request chỉ mang thay đổi muốn áp dụng, và chỉ với title, description, status.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · src/services/taskService.js</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">10</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Một chi tiết quan trọng của V3: thứ tự trong updateTask. Nếu áp dụng body rồi mới kiểm điều kiện, Bob chỉ cần gửi assignee=bob là tự giao task cho mình, hoặc gửi status=Open là tự mở lại task đã đóng. Em kiểm quyền trên bản ghi đang lưu trong DB trước, sau đó mới lấy các field cho phép từ body. Test E3 và E16 chứng minh hai cách tấn công này đều bị chặn, và dữ liệu không đổi. Nếu thầy hỏi về race condition giữa kiểm và ghi: trong bài, dữ liệu in-memory và Node chạy tuần tự nên không xen được. Với DB thật, em sẽ dùng UPDATE có điều kiện WHERE assignee và status, hoặc transaction. Đó là nội dung Block 7.</figcaption>
+</figure>
+<figure class="slide" id="slide-11" data-n="11" data-title="V4: tenant boundary đứng trước Admin">
+<h3 class="doc-title"><span>11</span> V4: tenant boundary đứng trước Admin</h3>
+<div class="frame"><div class="canvas">
+<section id="v4" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V4 · Tenant boundary</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">V4: tenant boundary đứng trước Admin</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#1B2430;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#F0A35E">v4-pre · cố ý sai để tái hiện</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F3EFE6">// Admin bị coi là toàn cục<br>if (user.tenantRole === 'Admin')<br>&#160;&#160;return allow('admin')<br>// ... ReBAC, RBAC, ABAC</p>
+<p style="font-size:24px;line-height:1.4;color:#F0A35E">Dana đọc được B1 và xóa được project Beta</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#1B2430;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#8DB8E8">v4 · tenant kiểm đầu tiên</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F3EFE6">if (user.tenantId !== project.tenantId)<br>&#160;&#160;return deny('other_tenant')&#160;&#160;// 404<br>if (user.tenantRole === 'Admin')<br>&#160;&#160;return allow('tenant_admin')</p>
+<p style="font-size:24px;line-height:1.4;color:#8DB8E8">Dana nhận 404, project Beta còn nguyên</p>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">Tenant đọc từ DB</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">X-Tenant-Id: beta bị bỏ qua (O17, E22)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">Phòng thủ nhiều lớp</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Membership chéo tenant vẫn bị chặn (E25)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3;color:#1F5FA8">6 đỏ → 8/8 xanh</p>
+<p style="font-size:24px;line-height:1.4">Oracle 15 → 17/17</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · git diff v4-pre v4: 2 file, +8 −3 dòng</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">11</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> V4 em làm hai bước để có evidence thật. Bước một, tag v4-pre: thêm tenant và Dana là Admin tenant Alpha, nhưng kiểm Admin trước. Đây đúng là trạng thái &quot;Admin toàn cục&quot;. Kết quả: Dana đọc được B1 và xóa được project Beta, 6 test đỏ. Bước hai: đưa tenant check lên đầu, Admin chỉ có toàn quyền trong tenant của mình. Tenant của người gọi lấy từ bản ghi user trong DB, nên header X-Tenant-Id hay tenantId trong body đều bị bỏ qua. Test E25 cố ý chèn membership chéo tenant để chứng minh tenant check vẫn chặn, kể cả khi dữ liệu bị lỗi. Production nên thêm Row-Level Security ở DB làm lớp thứ hai.</figcaption>
+</figure>
+<figure class="slide" id="slide-12" data-n="12" data-title="Check và list: hai đường, một luật">
+<h3 class="doc-title"><span>12</span> Check và list: hai đường, một luật</h3>
+<div class="frame"><div class="canvas">
+<section id="checklist" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Giải pháp · Nhất quán và hiệu năng</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Check và list: hai đường, một luật</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.2">Check · GET /tasks/:id</h3>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#1F5FA8">loadTask(id) → decide()</p>
+<p style="font-size:30px;line-height:1.4">Một quyết định cho một task.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.2">List · GET /tasks</h3>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#1F5FA8">readableProjectIds(user)<br>→ WHERE project_id IN (...)</p>
+<p style="font-size:30px;line-height:1.4">Một truy vấn cho cả danh sách, không N+1.</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#DCE6F2;border-radius:16px;padding:40px">
+<p style="font-size:30px;font-weight:700;line-height:1.3;color:#1F5FA8">Test C1: 6 user × 4 task</p>
+<p style="font-size:30px;line-height:1.4">Danh sách phải đúng bằng tập task mà check trả 200. Sửa luật một nơi mà quên nơi kia thì test đỏ.</p>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Thu hồi quyền có hiệu lực sau 0 giây (E5, C3): role đọc từ DB mỗi request, không cache, không nằm trong JWT.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · test/consistency.test.js</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">12</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Khi dữ liệu lớn có hai vấn đề. Thứ nhất, danh sách mà kiểm từng task sẽ tốn N+1 truy vấn. Em đưa điều kiện quyền vào chính truy vấn danh sách, tương đương JOIN project_members. Thứ hai, như vậy cùng một luật được viết ở hai chỗ, decide cho check và readableProjectIds cho list. Để chúng không lệch nhau, test C1 chạy với cả 6 user và 4 task: gọi list một lần, gọi check từng task, rồi so hai tập kết quả phải bằng nhau. Về thu hồi quyền: em đọc membership mỗi request nên gỡ Bob là Bob mất quyền ngay. Nếu cần cache thì để TTL ngắn và xóa cache khi đổi quyền.</figcaption>
+</figure>
+<h2 class="doc-section">Evidence: test đỏ trước, xanh sau, và kiểm tra ngược bản từ chối hết</h2>
+<figure class="slide" id="slide-13" data-n="13" data-title="Test oracle qua từng phiên bản">
+<h3 class="doc-title"><span>13</span> Test oracle qua từng phiên bản</h3>
+<div class="frame"><div class="canvas">
+<section id="oracle" data-transition="fade" style="background:#ECE7DC;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Evidence</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Test oracle qua từng phiên bản</h2>
+</div>
+<div style="display:flex;gap:48px;align-items:end;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">6</p>
+<div style="width:140px;height:132px;background:#9AA0A8;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">starter</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">7</p>
+<div style="width:140px;height:154px;background:#1F5FA8;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">v1</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">12</p>
+<div style="width:140px;height:264px;background:#1F5FA8;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">v2</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">14</p>
+<div style="width:140px;height:308px;background:#1F5FA8;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">v3</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700;color:#A3480A">15</p>
+<div style="width:140px;height:330px;background:#D98A4A;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#A3480A">v4-pre</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">17</p>
+<div style="width:140px;height:374px;background:#1F5FA8;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">v4</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">17</p>
+<div style="width:140px;height:374px;background:#1B2430;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">final</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Số test oracle qua trên 17. Chạy bộ test cuối trên src của từng git tag. v4-pre là trạng thái cố ý sai (Admin toàn cục).</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · node scripts/oracle-matrix.js</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">13</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Phần evidence. Em lập bảng giống slide 25 của thầy: lấy bộ test cuối cùng, chạy trên mã nguồn của từng git tag bằng script oracle-matrix.js. Starter qua 6 trên 17, đó là những request hợp lệ mà code chưa kiểm vẫn trả đúng. V1 lên 7, V2 lên 12, V3 lên 14. V4-pre lên 15 vì Dana đã tồn tại, nhưng hai test tenant vẫn đỏ. V4 đạt 17 trên 17. Bản final thêm GET /tasks và test nhất quán; bản nộp thêm audit log, OpenAPI, Docker, tổng cộng 84/84 test. Mỗi phiên bản còn có file before và after riêng trong docs/evidence, cùng một test, đỏ trước khi sửa và xanh sau khi sửa.</figcaption>
+</figure>
+<figure class="slide" id="slide-14" data-n="14" data-title="Kiểm tra ngược · bản sửa “từ chối hết”">
+<h3 class="doc-title"><span>14</span> Kiểm tra ngược · bản sửa “từ chối hết”</h3>
+<div class="frame"><div class="canvas">
+<section id="denyall" data-transition="fade" style="background:#1B2430;color:#F3EFE6;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#F0A35E">Kiểm tra ngược · bản sửa “từ chối hết”</p>
+<div style="display:flex;align-items:end;gap:48px">
+<h1 style="font-size:96px;font-weight:700;line-height:1.05;letter-spacing:-2px;color:#F0A35E">11/17</h1>
+<p style="font-size:40px;line-height:1.3;color:#F3EFE6">test oracle vẫn qua nếu chỉ chấm “403 hoặc 404”</p>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border:2px solid #3A4656;border-radius:16px;padding:40px">
+<p style="font-size:40px;font-weight:700;color:#8DB8E8">51/70</p>
+<p style="font-size:30px;line-height:1.4;color:#B9C0CC">test của nhóm trượt khi decide() luôn trả deny</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border:2px solid #3A4656;border-radius:16px;padding:40px">
+<p style="font-size:40px;font-weight:700;color:#8DB8E8">6 test được phép</p>
+<p style="font-size:30px;line-height:1.4;color:#B9C0CC">O2, O4, O8, O9, O11, O15 là những test bắt được bản sai này</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#B9C0CC">Vì vậy mỗi quyền đều có cả test được phép và test bị từ chối. Evidence: docs/evidence/deny-all.txt</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Đề có nhắc: từ chối toàn bộ request không phải là bản sửa đúng. Em kiểm tra ngược điều này. Em tạo một biến thể sai trong thư mục tạm, cho decide luôn trả deny, rồi chạy cả bộ test. Nếu chỉ chấm theo tiêu chí &quot;403 hoặc 404&quot; của đề, bản sai này vẫn qua 11/17 test oracle, khớp với cột &quot;Từ chối hết&quot; trên slide 25. Chỉ có 6 test được phép bắt được nó. Với bộ test của em, 51/70 test trượt, vì em kiểm cả test được phép lẫn mã cụ thể. Kết luận: test được phép là bắt buộc.</figcaption>
+</figure>
+<h2 class="doc-section">Các lựa chọn của nhóm: chọn gì, không chọn gì, vì sao, đánh đổi chấp nhận</h2>
+<figure class="slide" id="slide-15" data-n="15" data-title="Node.js 22 + Express 5, kiểm kiểu JSDoc">
+<h3 class="doc-title"><span>15</span> Node.js 22 + Express 5, kiểm kiểu JSDoc</h3>
+<div class="frame"><div class="canvas">
+<section id="c-stack" data-transition="fade" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 1/11 · Ngôn ngữ và framework</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Node.js 22 + Express 5, kiểm kiểu JSDoc</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Slide bài giảng dùng Express: code đặt cạnh slide là đối chiếu được</p>
+<p style="font-size:30px;line-height:1.35">Lộ rõ từng lớp: xác thực → scope → service (PEP) → policy (PDP)</p>
+<p style="font-size:30px;line-height:1.35">tsc --checkJs bắt sai kiểu như TypeScript ở Block 5, không cần build</p>
+<p style="font-size:30px;line-height:1.35">Mọi git tag cũ chạy thẳng bằng node để tái hiện test đỏ</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>TypeScript + tsx</b>: tag cũ phải biên dịch mới chạy được test-against</p>
+<p style="font-size:30px;line-height:1.35"><b>Spring Boot</b>: filter chạy trước khi nạp resource, cấu hình che cơ chế</p>
+<p style="font-size:30px;line-height:1.35"><b>NestJS Guard</b>: chưa biết task thuộc project nào, vẫn phải kiểm ở service</p>
+<p style="font-size:30px;line-height:1.35"><b>FastAPI</b>: khác hệ sinh thái nhóm đã dùng ở Block 5</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> JSDoc dài hơn cú pháp TypeScript; kiểm kiểu chạy bằng npm run typecheck, không chặn lúc chạy app.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.1</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">15</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Lựa chọn đầu tiên là stack. Nhóm chọn Node.js 22 và Express 5. Lý do chính: slide của thầy minh họa bằng Express, nên code của nhóm đặt cạnh slide là so được ngay; và Express để lộ rõ từng lớp, khi thầy hỏi kiểm quyền ở đâu thì chỉ đúng được dòng code. Block 5 nhóm dùng TypeScript. Block 6 giữ JavaScript vì một yêu cầu đặc thù: phải chạy bộ test mới trên mã nguồn của các tag cũ để chứng minh test đỏ trước khi sửa, JavaScript thì chạy thẳng bằng node. Lợi ích kiểm kiểu vẫn giữ nhờ JSDoc và tsc --checkJs, có kiểu Task, Membership, Decision trong src/types.d.ts, 0 lỗi. Không chọn Spring Boot vì filter chain chạy trước khi nạp resource, kiểm quyền object vẫn phải viết trong service, và annotation che cơ chế. Không chọn NestJS vì Guard chạy trước controller, chưa biết task thuộc project nào.</figcaption>
+</figure>
+<figure class="slide" id="slide-16" data-n="16" data-title="JWT chỉ có sub + scope, quyền đọc từ DB">
+<h3 class="doc-title"><span>16</span> JWT chỉ có sub + scope, quyền đọc từ DB</h3>
+<div class="frame"><div class="canvas">
+<section id="c-token" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 2/11 · Token và nguồn quyền</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">JWT chỉ có sub + scope, quyền đọc từ DB</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Role theo từng project, không có “một role” để đưa vào token</p>
+<p style="font-size:30px;line-height:1.35">Gỡ thành viên là mất quyền sau 0 giây (E5, C3)</p>
+<p style="font-size:30px;line-height:1.35">Scope giữ lại để tách lớp OAuth2 khỏi kiểm quyền (E7, E8)</p>
+<p style="font-size:30px;line-height:1.35">Ghim HS256 khi verify; production thiếu JWT_SECRET thì không chạy (P5)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>Role, tenant trong JWT</b>: quyền cũ sống tới khi token hết hạn</p>
+<p style="font-size:30px;line-height:1.35"><b>Opaque + introspection</b>: đề cho sẵn JWT, không xây lại OAuth2</p>
+<p style="font-size:30px;line-height:1.35"><b>ES256 + JWKS</b> như Block 5: một service tự ký và tự verify, chưa cần</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> mỗi request thêm một lần tra membership, với DB thật là một truy vấn có index (user_id, project_id).</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.2</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">16</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Token chỉ mang danh tính sub và scope OAuth2, hạn 15 phút. Role, tenant, assignee, status luôn đọc từ DB. Lý do: role phụ thuộc từng project nên không có một role để đưa vào token, và quyền có thể bị thu hồi bất cứ lúc nào. Slide 20 của thầy cho thấy role trong JWT 15 phút thì người bị gỡ còn truy cập tới 15 phút; đọc DB thì 0 giây, test E5 và C3. Scope vẫn giữ để minh họa ba lớp: E7 token chỉ có tasks:read vẫn bị 404 với B1, E8 Owner thiếu scope vẫn 403. Khi verify nhóm ghim thuật toán HS256 để chặn alg none. Production thiếu JWT_SECRET thì app không khởi động, test P5. Block 5 dùng ES256 vì Wallet API verify token do AS khác ký; ở đây một service tự ký và tự verify, khi tách nhiều service thì nên chuyển sang ES256.</figcaption>
+</figure>
+<figure class="slide" id="slide-17" data-n="17" data-title="RBAC + ReBAC + ABAC, có tenant boundary">
+<h3 class="doc-title"><span>17</span> RBAC + ReBAC + ABAC, có tenant boundary</h3>
+<div class="frame"><div class="canvas">
+<section id="c-model" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 3/11 · Mô hình access control</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">RBAC + ReBAC + ABAC, có tenant boundary</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35"><b>RBAC</b>: role trong project quyết định loại thao tác</p>
+<p style="font-size:30px;line-height:1.35"><b>ReBAC</b>: quan hệ thành viên user → project → task</p>
+<p style="font-size:30px;line-height:1.35"><b>ABAC</b>: assignee và status của chính task đó</p>
+<p style="font-size:30px;line-height:1.35"><b>Tenant</b>: ranh giới cứng, đứng trước mọi role (v4-pre chứng minh)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>ACL</b>: 20 user × 100 task = 2.000 mục, thêm task phải ghi thêm</p>
+<p style="font-size:30px;line-height:1.35"><b>Chỉ RBAC</b>: không biểu diễn được “task giao cho mình, còn Open”</p>
+<p style="font-size:30px;line-height:1.35"><b>Chỉ ABAC</b>: mất ma trận role × action để đối chiếu, test từng ô</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> ba mô hình trong một hàm cần thứ tự cố định. E20, E21 chứng minh không lớp nào thay được lớp khác.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.4</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">17</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Mô hình phân quyền là kết hợp, đúng như ví dụ V3 trên slide 11 của thầy. RBAC trả lời role có được loại thao tác này không. ReBAC trả lời người gọi có quan hệ thành viên với project chứa task không. ABAC trả lời với task cụ thể này, có được giao cho mình và còn Open không. Tenant là ranh giới cứng kiểm đầu tiên. Không chọn ACL vì bài không cần chia sẻ riêng một task, mà ACL cần số user nhân số task mục, slide 12 tính ra 2.000 mục. Không chỉ dùng RBAC vì role không biểu diễn được điều kiện riêng của từng task. Không chỉ dùng ABAC vì sẽ mất ma trận role nhân action rõ ràng để đối chiếu và test từng ô. Hai test E20 và E21: Viewer được giao task vẫn không sửa được, assignee bị gỡ khỏi project cũng không sửa được.</figcaption>
+</figure>
+<figure class="slide" id="slide-18" data-n="18" data-title="Một hàm thuần decide() thay vì engine">
+<h3 class="doc-title"><span>18</span> Một hàm thuần decide() thay vì engine</h3>
+<div class="frame"><div class="canvas">
+<section id="c-engine" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 4/11 · Policy Decision Point</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Một hàm thuần decide() thay vì engine</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Toàn bộ chính sách khoảng 30 dòng, đối chiếu được với bảng quyền</p>
+<p style="font-size:30px;line-height:1.35">Không biết HTTP: unit test từng nhánh, phủ 100% (U1 đến U5)</p>
+<p style="font-size:30px;line-height:1.35">Kiểm theo permission, không rải if (role === 'Owner') khắp code</p>
+<p style="font-size:30px;line-height:1.35">Tách riêng nên thay bằng engine được mà không sửa route</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>OPA / Rego</b>: thêm service và ngôn ngữ mới cho 3 role × 4 action</p>
+<p style="font-size:30px;line-height:1.35"><b>Casbin</b>: thêm DSL, ABAC assignee và status vẫn phải viết hàm riêng</p>
+<p style="font-size:30px;line-height:1.35"><b>OpenFGA</b>: hợp hàng triệu object chia sẻ qua nhóm, quá sức cho lab</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> đổi chính sách phải deploy lại; chưa có giao diện quản trị chính sách.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.6</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">18</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> PDP của nhóm là một hàm thuần decide trong src/policy.js, cùng bảng ROLE_PERMISSIONS. Toàn bộ chính sách khoảng 30 dòng, đọc là đối chiếu được với bảng chính sách nộp kèm. Vì hàm không biết HTTP nên unit test gọi thẳng từng nhánh, phủ 100% nhánh: role lạ như Admin, __proto__, constructor không có quyền; action chưa khai báo bị từ chối; thiếu dữ liệu task thì từ chối. Code kiểm theo permission như project:delete chứ không viết if role bằng Owner, nên thêm role chỉ sửa một bảng. Outline ghi OPA, Casbin, OpenFGA chỉ là hướng tìm hiểu thêm. OPA thêm cả một service và ngôn ngữ Rego cho 3 role và 4 action. Casbin thêm DSL nhưng điều kiện assignee và status vẫn phải viết hàm. OpenFGA rất mạnh cho câu hỏi kết thúc 4 với hàng triệu tài liệu, nhưng cần hạ tầng. PDP tách riêng nên sau này thay được mà không đụng route.</figcaption>
+</figure>
+<figure class="slide" id="slide-19" data-n="19" data-title="Kiểm quyền ở service, không ở controller">
+<h3 class="doc-title"><span>19</span> Kiểm quyền ở service, không ở controller</h3>
+<div class="frame"><div class="canvas">
+<section id="c-pep" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 5/11 · Policy Enforcement Point</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Kiểm quyền ở service, không ở controller</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Ba đường đọc task cùng đi qua một chỗ: /tasks/:id, /tasks, /projects/:id/tasks</p>
+<p style="font-size:30px;line-height:1.35">Service nạp resource từ DB: project suy ra từ task.projectId</p>
+<p style="font-size:30px;line-height:1.35">Route không import db (grep kiểm chứng); entry point mới tự được bảo vệ</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>Controller</b>: route nào quên kiểm là lọt</p>
+<p style="font-size:30px;line-height:1.35"><b>Middleware chung</b>: chạy trước khi biết task thuộc project nào</p>
+<p style="font-size:30px;line-height:1.35"><b>API gateway</b>: không biết quan hệ thành viên, assignee</p>
+<p style="font-size:30px;line-height:1.35"><b>Ẩn nút ở frontend</b>: curl bỏ qua giao diện (O6)</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> service ném HttpError 403/404 nên biết một chút về HTTP; tách chặt hơn thì ném lỗi miền và map ở lớp ngoài.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.7</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">19</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> PEP đặt ở business layer. Lý do số một: cùng một task có ba đường đọc là /tasks/:id, /tasks và /projects/:id/tasks; sau này có thể thêm export CSV hay job nhắc việc. Slide 17 của thầy cho thấy kiểm ở controller thì route nào quên là lọt. Service nạp resource từ DB, project suy ra từ task.projectId chứ không lấy projectId từ request. Không dùng middleware chung vì URL /tasks/B1 không có projectId; middleware chạy trước khi nạp resource, muốn biết project phải lấy từ request, tức là tin client. API gateway chỉ kiểm được token và scope, không biết quan hệ thành viên hay assignee. Ẩn nút ở frontend thì curl bỏ qua, test O6. Đánh đổi: service ném HttpError nên biết chút HTTP; tách chặt hơn thì ném lỗi miền, không ảnh hưởng policy.</figcaption>
+</figure>
+<figure class="slide" id="slide-20" data-n="20" data-title="In-memory, dataset ở data/seed.json">
+<h3 class="doc-title"><span>20</span> In-memory, dataset ở data/seed.json</h3>
+<div class="frame"><div class="canvas">
+<section id="c-data" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 6/11 · Lưu dữ liệu</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">In-memory, dataset ở data/seed.json</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Trọng tâm là phân quyền; máy chấm không cần cài cơ sở dữ liệu</p>
+<p style="font-size:30px;line-height:1.35">resetDb() trước mỗi test: 84 test độc lập, chạy khoảng 2 giây</p>
+<p style="font-size:30px;line-height:1.35">Dataset tách ra file JSON để nộp kèm, sửa không đụng code</p>
+<p style="font-size:30px;line-height:1.35">Policy không phụ thuộc cách lưu: đổi sang SQL chỉ sửa db.js</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>PostgreSQL</b>: phải cài thêm, test chậm, không thêm giá trị cho bài</p>
+<p style="font-size:30px;line-height:1.35"><b>node:sqlite</b> như Block 5: Block 6 không có yêu cầu transaction</p>
+<p style="font-size:30px;line-height:1.35"><b>MongoDB</b>: dữ liệu quan hệ user ↔ project ↔ task hợp bảng hơn</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> chưa đo JOIN với dữ liệu lớn; với DB thật cần UPDATE có điều kiện để chống TOCTOU (Block 7).</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.11</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">20</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Dữ liệu chạy trong RAM, nạp từ data/seed.json. Trọng tâm của bài là logic phân quyền, nên nhóm không muốn máy chấm phải cài cơ sở dữ liệu. resetDb chạy trước mỗi test nên 84 test độc lập, cả bộ khoảng 2 giây. Dataset tách ra file JSON để nộp kèm như mẫu của môn, sửa dataset không phải đụng code. Service và policy không phụ thuộc cách lưu, đổi sang SQL chỉ cần sửa db.js. Block 5 nhóm chọn node:sqlite vì cần transaction thật để chứng minh đổi code một lần; Block 6 không có yêu cầu transaction nào. Đánh đổi: chưa đo hiệu năng JOIN với dữ liệu lớn. Với DB thật, bước kiểm rồi ghi có cửa sổ TOCTOU, xử lý bằng UPDATE có điều kiện hoặc transaction, đúng nội dung Block 7.</figcaption>
+</figure>
+<figure class="slide" id="slide-21" data-n="21" data-title="Jest + Supertest, đỏ trước xanh sau">
+<h3 class="doc-title"><span>21</span> Jest + Supertest, đỏ trước xanh sau</h3>
+<div class="frame"><div class="canvas">
+<section id="c-test" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 7/11 · Kiểm thử và evidence</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Jest + Supertest, đỏ trước xanh sau</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Gọi HTTP thật vào app: qua đủ middleware → route → service → policy</p>
+<p style="font-size:30px;line-height:1.35">test-against.sh chạy test mới trên src của tag cũ để thấy đỏ</p>
+<p style="font-size:30px;line-height:1.35">Test từ chối kiểm cả dữ liệu không đổi và body không lộ nội dung</p>
+<p style="font-size:30px;line-height:1.35">Biến thể “từ chối hết” trượt 51/70: test được phép là bắt buộc</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>Postman / Newman</b>: khó chạy trên code của tag cũ, không gắn commit</p>
+<p style="font-size:30px;line-height:1.35"><b>Chỉ unit test decide()</b>: không chứng minh route thật đi qua policy</p>
+<p style="font-size:30px;line-height:1.35"><b>Chấp nhận “403 hoặc 404”</b>: không khóa quy ước che sự tồn tại</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> tái tạo bảng oracle cần lịch sử git (repository GitHub); evidence đã đo được lưu sẵn trong docs/evidence.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.12</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">21</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Kiểm thử bằng Jest và Supertest. Supertest gọi HTTP thật vào app mà không mở cổng, nên request đi qua đủ middleware, route, service, policy. Mỗi phiên bản em viết test trước, rồi dùng test-against.sh lấy src của tag cũ chạy bộ test mới để thấy đỏ, lưu thành file before; sửa xong lưu file after. Test từ chối kiểm cả dữ liệu không đổi, vì một lỗi hay gặp là ghi rồi mới báo lỗi. Test kiểm mã cụ thể 403 hay 404 theo quy ước, chặt hơn tiêu chí &quot;403 hoặc 404&quot; của đề. Kiểm tra ngược: biến thể decide luôn deny trượt 51 trên 70 test; nếu chỉ chấm 403 hoặc 404 thì bản sai vẫn qua 11 trên 17 oracle. Không chọn Postman vì khó chạy trên code của tag cũ và output không gắn commit. Không chỉ unit test vì không chứng minh route thật đi qua policy; nhóm có cả hai loại.</figcaption>
+</figure>
+<figure class="slide" id="slide-22" data-n="22" data-title="OpenAPI 3.1 + Swagger UI, khớp route">
+<h3 class="doc-title"><span>22</span> OpenAPI 3.1 + Swagger UI, khớp route</h3>
+<div class="frame"><div class="canvas">
+<section id="c-docs" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 8/11 · Tài liệu API</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">OpenAPI 3.1 + Swagger UI, khớp route</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Chuẩn mở, ghi rõ scope, policy action, mã lỗi cho từng endpoint</p>
+<p style="font-size:30px;line-height:1.35">Swagger UI tại /docs: Authorize bằng token rồi Try it out</p>
+<p style="font-size:30px;line-height:1.35">Test D1 so route Express với đặc tả: quên ghi tài liệu là test đỏ</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>swagger-jsdoc</b>: YAML rải trong comment làm route khó đọc</p>
+<p style="font-size:30px;line-height:1.35"><b>Postman collection</b>: không phải chuẩn mở</p>
+<p style="font-size:30px;line-height:1.35"><b>Redoc</b>: đẹp nhưng không có Try it out</p>
+<p style="font-size:30px;line-height:1.35"><b>Chỉ README</b>: không thử request được</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> đặc tả viết tay; D1 giữ đồng bộ path và method, còn schema vẫn phải tự rà khi đổi.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · docs/openapi.yaml</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">22</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Tài liệu API là đặc tả OpenAPI 3.1 viết tay trong docs/openapi.yaml, xem bằng Swagger UI tại /docs của server demo. Mỗi endpoint ghi scope cần có, policy action, và các mã lỗi 401, 403, 404, 400, 409. Thầy có thể bấm Authorize, dán token lấy từ trang demo, rồi Try it out gọi thật. Điểm nhóm thêm: test D1 đọc danh sách route trực tiếp từ Express router rồi so với đặc tả; thêm route mà quên tài liệu, hoặc tài liệu ghi route không tồn tại, thì test đỏ. Không chọn swagger-jsdoc vì phải rải YAML trong comment của route. Không chọn Postman collection vì không phải chuẩn mở. Redoc đẹp nhưng không thử request được. Swagger chỉ có trên server demo, không có trong image Docker.</figcaption>
+</figure>
+<figure class="slide" id="slide-23" data-n="23" data-title="Audit log JSON Lines, lý do chỉ ở server">
+<h3 class="doc-title"><span>23</span> Audit log JSON Lines, lý do chỉ ở server</h3>
+<div class="frame"><div class="canvas">
+<section id="c-log" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 9/11 · Logging và audit</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Audit log JSON Lines, lý do chỉ ở server</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Mỗi quyết định ghi userId, action, resource, allow, reason</p>
+<p style="font-size:30px;line-height:1.35">Client chỉ nhận 404 chung, server vẫn biết vì sao (L1)</p>
+<p style="font-size:30px;line-height:1.35">Nhiều 404 liên tiếp từ một user là dấu hiệu dò ID</p>
+<p style="font-size:30px;line-height:1.35">Docker, ELK, Loki đều gom được log stdout dạng này, không đổi code</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>ELK trong lab</b>: nặng; ELK là nơi gom log, không phải cách ghi log</p>
+<p style="font-size:30px;line-height:1.35"><b>winston / pino</b>: thêm dependency cho một loại sự kiện</p>
+<p style="font-size:30px;line-height:1.35"><b>Lý do trong response</b>: lộ chính sách cho kẻ tấn công</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> chưa có correlation id theo request; request bị chặn ở lớp 401 hay scope chưa ghi audit.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · src/audit.js · AUDIT_LOG=off|deny|all</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">23</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Logging: mỗi lần enforce ghi một dòng JSON ra stdout, gồm userId, action, projectId, taskId, allow và reason. Mức ghi chỉnh bằng biến AUDIT_LOG: off, deny hoặc all; mặc định deny, khi chạy test thì off. Ý nghĩa: client chỉ nhận 404 chung chung, nhưng server biết vì sao, ví dụ other_tenant hay not_member. Test L1 cho thấy hai lần bị chặn với lý do khác nhau trả cùng một body, nhưng log ghi đúng từng lý do. Nhiều 404 liên tiếp từ một user là dấu hiệu dò ID. Thầy có ví dụ ELK: ELK là nơi gom và tìm kiếm log, còn việc của app là ghi log đúng định dạng. JSON Lines ra stdout thì Filebeat, Loki hay Docker logging driver đều đọc được, không phải sửa code. Không dùng winston hay pino vì chỉ có một loại sự kiện. Log không chứa token hay nội dung task.</figcaption>
+</figure>
+<figure class="slide" id="slide-24" data-n="24" data-title="npm hoặc Docker alpine, không chạy root">
+<h3 class="doc-title"><span>24</span> npm hoặc Docker alpine, không chạy root</h3>
+<div class="frame"><div class="canvas">
+<section id="c-deploy" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 10/11 · Triển khai</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">npm hoặc Docker alpine, không chạy root</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">npm ci rồi npm start; .env đọc bằng process.loadEnvFile, không cần dotenv</p>
+<p style="font-size:30px;line-height:1.35">Docker node:22-alpine, npm ci --omit=dev, user node, HEALTHCHECK</p>
+<p style="font-size:30px;line-height:1.35">Thiếu JWT_SECRET thì compose và app đều dừng (P5)</p>
+<p style="font-size:30px;line-height:1.35">Image không chứa demo, test hay /dev/*</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>Image node:22 đầy đủ</b>: lớn, nhiều gói không cần</p>
+<p style="font-size:30px;line-height:1.35"><b>Chạy bằng root</b>: tăng thiệt hại nếu bị khai thác</p>
+<p style="font-size:30px;line-height:1.35"><b>PM2 / Kubernetes</b>: vượt phạm vi một API in-memory một process</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> dữ liệu in-memory nên chỉ chạy một replica; HTTPS đặt ở reverse proxy phía trước.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · Dockerfile · docker-compose.yml</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">24</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Có hai cách triển khai. Cách một: npm ci rồi npm start, Node 22 đọc file .env bằng process.loadEnvFile có sẵn, chỉ khi file tồn tại, nên không cần thư viện dotenv. Cách hai: Docker. Image dựa trên node:22-alpine cho nhỏ, chỉ cài dependency production bằng npm ci --omit=dev, chạy bằng user node chứ không phải root, có HEALTHCHECK gọi /health, và đóng server gọn khi nhận SIGTERM. Image đặt NODE_ENV=production nên thiếu JWT_SECRET thì app không khởi động; docker compose cũng dừng ngay nếu chưa đặt biến này. Thư mục demo bị loại khỏi image, nên production không có /dev/token. Không chọn image node:22 đầy đủ vì lớn hơn nhiều. Không dùng PM2 hay Kubernetes vì vượt phạm vi một API in-memory. Đánh đổi: dữ liệu in-memory nên chỉ chạy được một replica.</figcaption>
+</figure>
+<figure class="slide" id="slide-25" data-n="25" data-title="HTML thuần trên server demo riêng">
+<h3 class="doc-title"><span>25</span> HTML thuần trên server demo riêng</h3>
+<div class="frame"><div class="canvas">
+<section id="c-demo" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 11/11 · Trang demo</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">HTML thuần trên server demo riêng</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Chọn người gọi, gửi request, xem quyết định PDP và dữ liệu không đổi</p>
+<p style="font-size:30px;line-height:1.35">Chạy 21 kịch bản trong khoảng 0,3 giây, kết luận Đạt hoặc Sai</p>
+<p style="font-size:30px;line-height:1.35">/dev/token chỉ nằm trên server 127.0.0.1, không có trong app chính (S1)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>React / Vue</b>: cần bước build cho một trang khoảng 500 dòng</p>
+<p style="font-size:30px;line-height:1.35"><b>/dev/* trong app khi NODE_ENV=dev</b>: đặt sai biến là thành cửa sau</p>
+<p style="font-size:30px;line-height:1.35"><b>Chỉ Postman</b>: không cho thấy lý do của PDP và dữ liệu không đổi</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> máy khác không gọi được server demo; nhóm khác muốn thử thì clone repository và chạy npm run demo trên máy mình.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · npm run demo → localhost:3100/demo</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">25</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Lựa chọn cuối là trang demo cho buổi thuyết trình. Đây là một trang HTML và JavaScript thuần trên một server demo riêng. Server demo bọc chính app thật và thêm /demo, /docs, /dev/token, /dev/reset, /dev/state, /dev/audit. Trên trang, chọn người gọi, gửi request, xem response, lệnh curl tương đương, quyết định của PDP lấy từ audit log, và bảng dữ liệu cho thấy request bị từ chối không làm đổi gì. Nút chạy tất cả chạy 21 kịch bản trong khoảng 0,3 giây. Vì /dev/token cấp token cho bất kỳ ai, server demo chỉ nghe trên 127.0.0.1 và không bao giờ được mount vào app chính; test S1 gọi /dev/token vào app chính thì nhận 401 hoặc 404. Không dùng React hay Vue vì cần bước build. Không mount /dev vào app theo biến môi trường, vì đặt sai biến là thành cửa sau trên production.</figcaption>
+</figure>
+<h2 class="doc-section">Tóm tắt lựa chọn, giới hạn và cách demo</h2>
+<figure class="slide" id="slide-26" data-n="26" data-title="Các lựa chọn của nhóm">
+<h3 class="doc-title"><span>26</span> Các lựa chọn của nhóm</h3>
+<div class="frame"><div class="canvas">
+<section id="tradeoffs" data-transition="fade" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#A3480A">Tóm tắt</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Các lựa chọn của nhóm</h2>
+</div>
+<table style="font-size:24px;color:#1B2430">
+<tr style="background:#ECE7DC"><th style="width:18%">Hạng mục</th><th style="width:36%">Nhóm chọn</th><th style="width:46%">Thay vì</th></tr>
+<tr><td>Ngôn ngữ</td><td style="color:#1F5FA8">Node 22 + Express 5 + JSDoc checkJs</td><td style="color:#A3480A">TypeScript + tsx, Spring Boot, NestJS, FastAPI</td></tr>
+<tr><td>Token</td><td style="color:#1F5FA8">JWT sub + scope, quyền đọc từ DB</td><td style="color:#A3480A">Role trong JWT, opaque, ES256 + JWKS</td></tr>
+<tr><td>Mô hình</td><td style="color:#1F5FA8">RBAC + ReBAC + ABAC + tenant</td><td style="color:#A3480A">ACL, chỉ RBAC, chỉ ABAC</td></tr>
+<tr><td>PDP</td><td style="color:#1F5FA8">Hàm thuần decide()</td><td style="color:#A3480A">OPA, Casbin, OpenFGA</td></tr>
+<tr><td>PEP</td><td style="color:#1F5FA8">Service layer</td><td style="color:#A3480A">Controller, middleware, gateway, frontend</td></tr>
+<tr><td>Dữ liệu</td><td style="color:#1F5FA8">In-memory + data/seed.json</td><td style="color:#A3480A">PostgreSQL, node:sqlite, MongoDB</td></tr>
+<tr><td>Kiểm thử</td><td style="color:#1F5FA8">Jest + Supertest, đỏ/xanh theo tag</td><td style="color:#A3480A">Postman, chỉ unit test</td></tr>
+<tr><td>Tài liệu API</td><td style="color:#1F5FA8">OpenAPI 3.1 + Swagger UI</td><td style="color:#A3480A">swagger-jsdoc, Postman, Redoc</td></tr>
+<tr><td>Logging</td><td style="color:#1F5FA8">Audit JSON Lines, AUDIT_LOG</td><td style="color:#A3480A">ELK trong lab, winston, pino</td></tr>
+<tr><td>Triển khai</td><td style="color:#1F5FA8">npm + Docker alpine non-root</td><td style="color:#A3480A">Image đầy đủ, root, PM2, Kubernetes</td></tr>
+<tr><td>Demo</td><td style="color:#1F5FA8">HTML thuần, server 127.0.0.1</td><td style="color:#A3480A">React/Vue, /dev trong app chính</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §5</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">26</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Bảng tóm tắt 11 lựa chọn vừa trình bày, khớp với mục 5 của REPORT.md. Cột giữa là thứ nhóm chọn, cột phải là các phương án đã cân nhắc và loại. Hai mục tiêu xuyên suốt: thấy rõ cơ chế để bảo vệ được trước thầy, và chứng minh bằng test để không phải tin lời. Mỗi dòng đều có test hoặc evidence đi kèm trong REPORT.md.</figcaption>
+</figure>
+<figure class="slide" id="slide-27" data-n="27" data-title="Giới hạn và hướng mở rộng">
+<h3 class="doc-title"><span>27</span> Giới hạn và hướng mở rộng</h3>
+<div class="frame"><div class="canvas">
+<section id="limits" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#A3480A">Trade-off · Chưa kiểm tra</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Giới hạn và hướng mở rộng</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:32px">
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<svg class="x-icon" style="color:#A3480A;width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+<p style="font-size:30px;font-weight:700;line-height:1.3">Concurrency</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Kiểm và ghi trong một transaction, hoặc UPDATE có điều kiện (Block 7)</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<svg class="x-icon" style="color:#A3480A;width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+<p style="font-size:30px;font-weight:700;line-height:1.3">Cache quyền</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">TTL ngắn, xóa cache khi gỡ thành viên hay đổi role</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<svg class="x-icon" style="color:#A3480A;width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+<p style="font-size:30px;font-weight:700;line-height:1.3">DB thật</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">JOIN project_members có index; thêm Row-Level Security cho tenant</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<svg class="x-icon" style="color:#A3480A;width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
+<p style="font-size:30px;font-weight:700;line-height:1.3">Chia sẻ riêng task</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Thêm quan hệ task_shares, dạng ACL hoặc ReBAC</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<svg class="x-icon" style="color:#A3480A;width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7"/><path d="M16 4a4 4 0 0 1 0 8"/><path d="M22 21c0-3-1.8-5.6-4.5-6.6"/></svg>
+<p style="font-size:30px;font-weight:700;line-height:1.3">Giao lại task</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Action task:assign chỉ cho Owner, có test riêng</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<svg class="x-icon" style="color:#A3480A;width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5"/><path d="M12 18h.01"/></svg>
+<p style="font-size:30px;font-weight:700;line-height:1.3">Rate limit</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Giới hạn tần suất theo user và IP; cảnh báo từ audit log khi thấy dò ID</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §10</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">27</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Những gì nhóm chưa làm, nói thẳng kèm hướng xử lý. Concurrency: kiểm rồi ghi là hai bước, với DB thật cần transaction hoặc UPDATE có điều kiện, thuộc Block 7. Cache quyền: hiện chưa có; nếu thêm thì TTL ngắn và xóa khi đổi quyền. DB thật: hiện dữ liệu in-memory, readableProjectIds mô phỏng JOIN; production nên thêm Row-Level Security theo tenant làm lớp thứ hai. Chia sẻ riêng một task chưa có, sẽ thêm như một quan hệ. Chưa cho giao lại task qua PATCH, sẽ thêm action task:assign. Audit log đã có; còn thiếu rate limit để chặn dò ID tốc độ cao. Tất cả nằm trong REPORT.md mục 10.</figcaption>
+</figure>
+<figure class="slide" id="slide-28" data-n="28" data-title="Demo: chạy lại mọi evidence">
+<h3 class="doc-title"><span>28</span> Demo: chạy lại mọi evidence</h3>
+<div class="frame"><div class="canvas">
+<section id="demo" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#A3480A">Demo</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Demo: chạy lại mọi evidence</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:32px;align-items:center;background:#1B2430;border-radius:12px;padding:20px 32px">
+<p style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F3EFE6">npm run check</p>
+<p style="flex:2;font-size:24px;color:#B9C0CC">Kiểm kiểu + 84/84 test, gồm 17 oracle</p>
+</div>
+<div style="display:flex;gap:32px;align-items:center;background:#1B2430;border-radius:12px;padding:20px 32px">
+<p style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F3EFE6">npm run demo</p>
+<p style="flex:2;font-size:24px;color:#B9C0CC">/demo: 21 kịch bản · /docs: Swagger UI</p>
+</div>
+<div style="display:flex;gap:32px;align-items:center;background:#1B2430;border-radius:12px;padding:20px 32px">
+<p style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F3EFE6">bash scripts/demo-idor.sh</p>
+<p style="flex:2;font-size:24px;color:#B9C0CC">Alice: A1 trả 200, B1 trả 404</p>
+</div>
+<div style="display:flex;gap:32px;align-items:center;background:#1B2430;border-radius:12px;padding:20px 32px">
+<p style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F3EFE6">bash scripts/test-against.sh starter test/v1.idor.test.js</p>
+<p style="flex:2;font-size:24px;color:#B9C0CC">Cùng test đó, đỏ trên code starter</p>
+</div>
+<div style="display:flex;gap:32px;align-items:center;background:#1B2430;border-radius:12px;padding:20px 32px">
+<p style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F3EFE6">docker compose up --build</p>
+<p style="flex:2;font-size:24px;color:#B9C0CC">Container non-root, kiểm /health</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Muốn tự thử: <b>npm run token -- alice</b> rồi gọi curl, hoặc dán token vào Authorize trên Swagger UI.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · README.md</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">28</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Phần demo trực tiếp. Một, npm run check: kiểm kiểu và chạy 84 test trong vài giây. Hai, npm run demo: mở localhost:3100/demo, chọn người gọi rồi chạy từng kịch bản hoặc cả 21 kịch bản; ô response hiện quyết định của PDP lấy từ audit log, bảng dữ liệu cho thấy request bị từ chối không làm đổi gì; mở thêm /docs để thấy Swagger UI. Ba, demo-idor.sh: Alice đọc A1 được 200, B1 bị 404. Bốn, test-against.sh: cùng bộ test V1 đỏ trên code starter, tức test thật sự bắt được lỗi. Năm, nếu có Docker: docker compose up, rồi gọi /health. Muốn tự thử thì in token bằng npm run token rồi gọi curl, hoặc dán vào Authorize trên Swagger.</figcaption>
+</figure>
+<h2 class="doc-section">Câu hỏi kết thúc và hỏi đáp</h2>
+<figure class="slide" id="slide-29" data-n="29" data-title="Trả lời câu hỏi kết thúc">
+<h3 class="doc-title"><span>29</span> Trả lời câu hỏi kết thúc</h3>
+<div class="frame"><div class="canvas">
+<section id="exit" data-transition="fade" style="background:#ECE7DC;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Tổng kết</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Trả lời câu hỏi kết thúc</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:32px">
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">1 · Scope tasks:read có đủ để đọc B1?</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Không. Scope giới hạn token, không chứng minh Alice có quan hệ với B1. Test E7.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">2 · Member còn cần kiểm dữ liệu nào?</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Project của task, assignee, status, tenant. Tất cả đọc từ DB. Test O12 đến O16.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">3 · Ẩn nút Delete có đủ không?</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Không. curl bỏ qua giao diện, server phải tự kiểm role. Test O6: Bob xóa project bị 403.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">4 · Hàng triệu tài liệu chia sẻ qua nhóm?</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Một PDP chung, quan hệ lưu như dữ liệu (ReBAC, OpenFGA), tách check và list, cache có thu hồi, một bộ test chung.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · docs/thuyet-minh/07-cau-hoi-ket-thuc.md</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">29</p>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Bốn câu hỏi kết thúc của buổi học, mỗi câu em gắn với một test trong bài. Câu 1: scope không đủ, test E7. Câu 2: ngoài role còn project, assignee, status, tenant, tất cả đọc từ DB. Câu 3: ẩn nút chỉ là giao diện, test O6 gọi thẳng DELETE và bị 403, còn ở starter request này xóa project thật. Câu 4: giữ một PDP chung, lưu quan hệ như dữ liệu kiểu OpenFGA, tách check và list giống test C1 của em, có cache kèm thu hồi, và một bộ test chung.</figcaption>
+</figure>
+<figure class="slide" id="slide-30" data-n="30" data-title="Cảm ơn thầy và các bạn">
+<h3 class="doc-title"><span>30</span> Cảm ơn thầy và các bạn</h3>
+<div class="frame"><div class="canvas">
+<section id="thanks" data-transition="fade" style="background:#1B2430;color:#F3EFE6;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:space-between">
+<p style="font-size:30px;font-weight:600;color:#F0A35E;letter-spacing:2px;text-transform:uppercase">Hỏi đáp</p>
+<div style="display:flex;flex-direction:column;gap:32px">
+<h1 style="font-size:96px;font-weight:700;line-height:1.05;letter-spacing:-2px">Cảm ơn thầy và các bạn</h1>
+<p style="font-size:40px;line-height:1.3;color:#B9C0CC">Kiểm quyền trên từng resource, đặt ở server, chứng minh bằng test đỏ trước và xanh sau.</p>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#8DB8E8">REPORT.md</p>
+<p style="font-size:24px;color:#B9C0CC">Lựa chọn, lý do, đánh đổi</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#8DB8E8">src/policy.js</p>
+<p style="font-size:24px;color:#B9C0CC">PDP: toàn bộ chính sách</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#8DB8E8">docs/evidence/</p>
+<p style="font-size:24px;color:#B9C0CC">Output trước, sau, bảng oracle</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#8DB8E8">AUDIT.md</p>
+<p style="font-size:24px;color:#B9C0CC">Đối chiếu từng yêu cầu đề</p>
+</div>
+</div>
+</section>
+</div></div>
+<figcaption class="notes"><b>Giải thích:</b> Cảm ơn thầy và các bạn. Tóm lại ba ý: kiểm quyền trên từng resource, đặt ở server qua một PDP chung, và chứng minh bằng cùng một test đỏ trước khi sửa, xanh sau khi sửa. REPORT.md giải thích 17 lựa chọn của nhóm, AUDIT.md đối chiếu từng yêu cầu của đề với nơi hiện thực và test chứng minh. Nhóm xin nhận câu hỏi. Khi trả lời: theo khung quyết định, lý do, đánh đổi, rồi chỉ vào test chứng minh; câu nào là giới hạn thì nói thẳng và nêu hướng xử lý trong REPORT.md mục 10.</figcaption>
+</figure>
+</main>
+<div id="notesPanel" aria-live="polite"></div>
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'))
+  var body = document.body
+  var current = 0
+  var $ = function (id) { return document.getElementById(id) }
+  ;['prev', 'toc', 'count', 'next', 'notesBtn', 'modeBtn', 'fsBtn'].forEach(function (id) { $(id).hidden = false })
+
+  function fit() {
+    var s
+    if (body.classList.contains('present')) {
+      var h = window.innerHeight - $('deck').getBoundingClientRect().top
+      s = Math.min(window.innerWidth / 1920, h / 1080)
+    } else {
+      s = Math.min(1200, document.documentElement.clientWidth - 32) / 1920
+    }
+    document.documentElement.style.setProperty('--s', String(Math.max(s, 0.1)))
+  }
+
+  function show(n) {
+    current = Math.max(0, Math.min(slides.length - 1, n))
+    slides.forEach(function (el, i) { el.classList.toggle('active', i === current) })
+    $('toc').value = String(current + 1)
+    $('count').textContent = (current + 1) + ' / ' + slides.length
+    var notes = slides[current].querySelector('.notes')
+    $('notesPanel').textContent = notes ? notes.textContent : ''
+    if (body.classList.contains('present')) history.replaceState(null, '', '#' + (current + 1))
+  }
+
+  function setMode(present) {
+    body.classList.toggle('present', present)
+    $('modeBtn').textContent = present ? 'Đọc tài liệu' : 'Trình chiếu'
+    fit()
+    if (present) show(current)
+    else {
+      history.replaceState(null, '', '#doc')
+      slides[current].scrollIntoView({ block: 'start' })
+    }
+  }
+
+  $('prev').onclick = function () { if (!body.classList.contains('present')) setMode(true); show(current - 1) }
+  $('next').onclick = function () { if (!body.classList.contains('present')) setMode(true); show(current + 1) }
+  $('toc').onchange = function () {
+    current = Number(this.value) - 1
+    if (body.classList.contains('present')) show(current)
+    else slides[current].scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }
+  $('notesBtn').onclick = function () { if (!body.classList.contains('present')) setMode(true); body.classList.toggle('show-notes') }
+  $('modeBtn').onclick = function () { setMode(!body.classList.contains('present')) }
+  $('fsBtn').onclick = function () {
+    if (!body.classList.contains('present')) setMode(true)
+    if (document.fullscreenElement) document.exitFullscreen()
+    else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen()
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target && /^(SELECT|INPUT|TEXTAREA)$/.test(e.target.tagName)) return
+    var k = e.key
+    if (k === 'd' || k === 'D') return setMode(!body.classList.contains('present'))
+    if (!body.classList.contains('present')) return
+    if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { e.preventDefault(); show(current + 1) }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); show(current - 1) }
+    else if (k === 'Home') show(0)
+    else if (k === 'End') show(slides.length - 1)
+    else if (k === 'n' || k === 'N') body.classList.toggle('show-notes')
+    else if (k === 'f' || k === 'F') $('fsBtn').onclick()
+  })
+
+  slides.forEach(function (el, i) {
+    el.querySelector('.frame').addEventListener('click', function () {
+      if (body.classList.contains('present')) show(current + 1)
+    })
+  })
+
+  window.addEventListener('hashchange', function () {
+    var n = Number(location.hash.slice(1))
+    if (n > 0) { current = n - 1; if (body.classList.contains('present')) show(current); else setMode(true) }
+  })
+  window.addEventListener('resize', fit)
+  document.addEventListener('fullscreenchange', fit)
+  window.addEventListener('beforeprint', function () { body.classList.remove('present'); fit() })
+
+  // Mở bằng #12 thì vào thẳng trình chiếu slide 12; mặc định là chế độ đọc tài liệu.
+  var start = Number(location.hash.slice(1))
+  if (start > 0) { current = start - 1; setMode(true) }
+  else { fit(); show(0); $('modeBtn').textContent = 'Trình chiếu' }
+  // Ở chế độ đọc, cập nhật slide hiện tại theo vị trí cuộn để mục lục và nút ← → đi đúng chỗ.
+  window.addEventListener('scroll', function () {
+    if (body.classList.contains('present')) return
+    for (var i = slides.length - 1; i >= 0; i--) {
+      if (slides[i].getBoundingClientRect().top < 120) { current = i; $('toc').value = String(i + 1); $('count').textContent = (i + 1) + ' / ' + slides.length; return }
+    }
+  }, { passive: true })
+})()
+</script>
+</body>
+</html>

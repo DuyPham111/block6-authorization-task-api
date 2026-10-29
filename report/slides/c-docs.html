@@ -1,0 +1,25 @@
+<section id="c-docs" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 8/11 · Tài liệu API</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">OpenAPI 3.1 + Swagger UI, khớp route</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Chuẩn mở, ghi rõ scope, policy action, mã lỗi cho từng endpoint</p>
+<p style="font-size:30px;line-height:1.35">Swagger UI tại /docs: Authorize bằng token rồi Try it out</p>
+<p style="font-size:30px;line-height:1.35">Test D1 so route Express với đặc tả: quên ghi tài liệu là test đỏ</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>swagger-jsdoc</b>: YAML rải trong comment làm route khó đọc</p>
+<p style="font-size:30px;line-height:1.35"><b>Postman collection</b>: không phải chuẩn mở</p>
+<p style="font-size:30px;line-height:1.35"><b>Redoc</b>: đẹp nhưng không có Try it out</p>
+<p style="font-size:30px;line-height:1.35"><b>Chỉ README</b>: không thử request được</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> đặc tả viết tay; D1 giữ đồng bộ path và method, còn schema vẫn phải tự rà khi đổi.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · docs/openapi.yaml</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">22</p>
+<aside>Tài liệu API là đặc tả OpenAPI 3.1 viết tay trong docs/openapi.yaml, xem bằng Swagger UI tại /docs của server demo. Mỗi endpoint ghi scope cần có, policy action, và các mã lỗi 401, 403, 404, 400, 409. Thầy có thể bấm Authorize, dán token lấy từ trang demo, rồi Try it out gọi thật. Điểm nhóm thêm: test D1 đọc danh sách route trực tiếp từ Express router rồi so với đặc tả; thêm route mà quên tài liệu, hoặc tài liệu ghi route không tồn tại, thì test đỏ. Không chọn swagger-jsdoc vì phải rải YAML trong comment của route. Không chọn Postman collection vì không phải chuẩn mở. Redoc đẹp nhưng không thử request được. Swagger chỉ có trên server demo, không có trong image Docker.</aside>
+</section>

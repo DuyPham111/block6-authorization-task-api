@@ -1,0 +1,26 @@
+<section id="c-stack" data-transition="fade" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 1/11 · Ngôn ngữ và framework</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Node.js 22 + Express 5, kiểm kiểu JSDoc</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Slide bài giảng dùng Express: code đặt cạnh slide là đối chiếu được</p>
+<p style="font-size:30px;line-height:1.35">Lộ rõ từng lớp: xác thực → scope → service (PEP) → policy (PDP)</p>
+<p style="font-size:30px;line-height:1.35">tsc --checkJs bắt sai kiểu như TypeScript ở Block 5, không cần build</p>
+<p style="font-size:30px;line-height:1.35">Mọi git tag cũ chạy thẳng bằng node để tái hiện test đỏ</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>TypeScript + tsx</b>: tag cũ phải biên dịch mới chạy được test-against</p>
+<p style="font-size:30px;line-height:1.35"><b>Spring Boot</b>: filter chạy trước khi nạp resource, cấu hình che cơ chế</p>
+<p style="font-size:30px;line-height:1.35"><b>NestJS Guard</b>: chưa biết task thuộc project nào, vẫn phải kiểm ở service</p>
+<p style="font-size:30px;line-height:1.35"><b>FastAPI</b>: khác hệ sinh thái nhóm đã dùng ở Block 5</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> JSDoc dài hơn cú pháp TypeScript; kiểm kiểu chạy bằng npm run typecheck, không chặn lúc chạy app.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.1</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">15</p>
+<aside>Lựa chọn đầu tiên là stack. Nhóm chọn Node.js 22 và Express 5. Lý do chính: slide của thầy minh họa bằng Express, nên code của nhóm đặt cạnh slide là so được ngay; và Express để lộ rõ từng lớp, khi thầy hỏi kiểm quyền ở đâu thì chỉ đúng được dòng code. Block 5 nhóm dùng TypeScript. Block 6 giữ JavaScript vì một yêu cầu đặc thù: phải chạy bộ test mới trên mã nguồn của các tag cũ để chứng minh test đỏ trước khi sửa, JavaScript thì chạy thẳng bằng node. Lợi ích kiểm kiểu vẫn giữ nhờ JSDoc và tsc --checkJs, có kiểu Task, Membership, Decision trong src/types.d.ts, 0 lỗi. Không chọn Spring Boot vì filter chain chạy trước khi nạp resource, kiểm quyền object vẫn phải viết trong service, và annotation che cơ chế. Không chọn NestJS vì Guard chạy trước controller, chưa biết task thuộc project nào.</aside>
+</section>

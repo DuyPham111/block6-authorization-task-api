@@ -120,4 +120,7 @@ Route chỉ còn một dòng: `res.json(taskService.getTask(req.user, req.params
 ## Câu hỏi bẫy
 
 **H: Nếu `decide()` ném lỗi vì `project` undefined (task trỏ tới project đã bị xóa) thì sao?**
-Đ: `deleteProject` xóa luôn task và thành viên của project nên không có task mồ côi. Nếu dữ liệu vẫn lỗi, Express trả 500, không trả 200. Tức là hệ thống *fail closed*: lỗi thì từ chối chứ không cho qua.
+Đ: `deleteProject` xóa luôn task và thành viên của project nên bình thường không có task mồ côi. Nếu dữ liệu vẫn lỗi, `loadTask` không tìm thấy project thì trả 404 ngay, không gọi `decide()`. Trong `decide()`, Member sửa mà thiếu dữ liệu task cũng bị từ chối (`missing_task`, test U5). Hệ thống *fail closed*: thiếu dữ liệu thì từ chối chứ không cho qua.
+
+**H: Ở bản cuối, Alice đọc B1 bị chặn ở bước nào?**
+Đ: Ở bước 1, tenant boundary (`other_tenant`), vì Beta thuộc tenant khác. Ở V1–V3 chưa có tenant nên bước ReBAC (`not_member`) chặn. Hai lớp cùng chặn là phòng thủ nhiều lớp. Audit log ghi đúng lý do của từng trường hợp (test L1), còn client nhận cùng một body 404.

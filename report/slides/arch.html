@@ -1,0 +1,46 @@
+<section id="arch" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Giải pháp · Kiến trúc</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Kiểm quyền ở service, quyết định ở PDP</h2>
+</div>
+<div style="display:flex;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:12px;padding:24px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;font-weight:600">authenticate</p>
+<p style="font-size:24px;line-height:1.3;color:#5B616B">JWT → req.user, lỗi 401</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:40px;height:20px;background:#9AA0A8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:12px;padding:24px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;font-weight:600">requireScope</p>
+<p style="font-size:24px;line-height:1.3;color:#5B616B">scope, lỗi 403</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:40px;height:20px;background:#9AA0A8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:12px;padding:24px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;font-weight:600">routes/*</p>
+<p style="font-size:24px;line-height:1.3;color:#5B616B">không import db</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:40px;height:20px;background:#9AA0A8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border:2px solid #1F5FA8;border-radius:12px;padding:24px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;font-weight:600;color:#1F5FA8">service · PEP</p>
+<p style="font-size:24px;line-height:1.3;color:#1B2430">nạp resource, enforce</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:40px;height:20px;background:#1F5FA8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#1F5FA8;border-radius:12px;padding:24px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;font-weight:600;color:#F3EFE6">policy · PDP</p>
+<p style="font-size:24px;line-height:1.3;color:#F3EFE6">decide(), hàm thuần</p>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.15">PEP · service</h3>
+<p style="font-size:30px;line-height:1.4">taskService, projectService nạp task hoặc project từ DB, gọi enforce rồi mới thao tác. Bị từ chối thì ném 403 hoặc 404.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.15">PDP · decide()</h3>
+<p style="font-size:30px;line-height:1.4">Trả về allow, visible, reason. Không biết HTTP, không ghi dữ liệu. Unit test phủ 100% nhánh.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Mọi entry point đi qua cùng một enforce: <b>GET /tasks/:id</b>, <b>GET /tasks</b>, <b>GET /projects/:id/tasks</b>, PATCH, DELETE, quản lý thành viên.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">04</p>
+<aside>Kiến trúc em chọn. Middleware xác thực và scope có sẵn. Route chỉ chuyển request vào service và không được import db. Service là PEP: nạp resource từ DB, ví dụ project của task lấy từ task.projectId chứ không lấy từ request, rồi gọi enforce. PDP là hàm decide trong policy.js, thuần, không biết HTTP, nên unit test được từng nhánh. Lý do không đặt ở controller: cùng một task có ba đường đọc, đặt ở controller thì route nào quên là lọt. Lý do không dùng middleware: middleware chạy trước khi biết task thuộc project nào. Em đã grep để chắc chắn route không import db.</aside>
+</section>

@@ -1,0 +1,25 @@
+<section id="c-engine" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 4/11 · Policy Decision Point</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Một hàm thuần decide() thay vì engine</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Toàn bộ chính sách khoảng 30 dòng, đối chiếu được với bảng quyền</p>
+<p style="font-size:30px;line-height:1.35">Không biết HTTP: unit test từng nhánh, phủ 100% (U1 đến U5)</p>
+<p style="font-size:30px;line-height:1.35">Kiểm theo permission, không rải if (role === 'Owner') khắp code</p>
+<p style="font-size:30px;line-height:1.35">Tách riêng nên thay bằng engine được mà không sửa route</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>OPA / Rego</b>: thêm service và ngôn ngữ mới cho 3 role × 4 action</p>
+<p style="font-size:30px;line-height:1.35"><b>Casbin</b>: thêm DSL, ABAC assignee và status vẫn phải viết hàm riêng</p>
+<p style="font-size:30px;line-height:1.35"><b>OpenFGA</b>: hợp hàng triệu object chia sẻ qua nhóm, quá sức cho lab</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> đổi chính sách phải deploy lại; chưa có giao diện quản trị chính sách.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.6</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">18</p>
+<aside>PDP của nhóm là một hàm thuần decide trong src/policy.js, cùng bảng ROLE_PERMISSIONS. Toàn bộ chính sách khoảng 30 dòng, đọc là đối chiếu được với bảng chính sách nộp kèm. Vì hàm không biết HTTP nên unit test gọi thẳng từng nhánh, phủ 100% nhánh: role lạ như Admin, __proto__, constructor không có quyền; action chưa khai báo bị từ chối; thiếu dữ liệu task thì từ chối. Code kiểm theo permission như project:delete chứ không viết if role bằng Owner, nên thêm role chỉ sửa một bảng. Outline ghi OPA, Casbin, OpenFGA chỉ là hướng tìm hiểu thêm. OPA thêm cả một service và ngôn ngữ Rego cho 3 role và 4 action. Casbin thêm DSL nhưng điều kiện assignee và status vẫn phải viết hàm. OpenFGA rất mạnh cho câu hỏi kết thúc 4 với hàng triệu tài liệu, nhưng cần hạ tầng. PDP tách riêng nên sau này thay được mà không đụng route.</aside>
+</section>

@@ -12,6 +12,9 @@ Mỗi file gồm: mục tiêu, những gì đã làm, giải thích thiết kế
 | [05-kien-truc.md](05-kien-truc.md) | PEP/PDP, vị trí đặt kiểm quyền, check và list, cache, mở rộng quy mô |
 | [06-kiem-thu.md](06-kiem-thu.md) | Chiến lược test, evidence đỏ/xanh, oracle, chống "từ chối hết" |
 | [07-cau-hoi-ket-thuc.md](07-cau-hoi-ket-thuc.md) | 4 câu hỏi kết thúc, đáp án hai bài quiz trên slide |
+| [08-van-hanh-va-cong-cu.md](08-van-hanh-va-cong-cu.md) | Kiểm kiểu, audit log, OpenAPI/Swagger, Docker, trang demo: chọn gì, vì sao |
+
+Báo cáo tổng hợp mọi lựa chọn: [../../REPORT.md](../../REPORT.md). Bộ slide: [../../REPORT.html](../../REPORT.html).
 
 ## 10 câu thầy dễ hỏi nhất (trả lời trong 30 giây)
 

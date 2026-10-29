@@ -28,6 +28,20 @@ describe('Server demo tách biệt khỏi app chính', () => {
     expect(other.status).toBe(404)
   })
 
+  test('[S4] /dev/audit trả lý do của PDP cho trang demo; Swagger UI và đặc tả được phục vụ', async () => {
+    const token = await demoToken('bob')
+    await request(demo).patch('/tasks/A2').set('Authorization', `Bearer ${token}`).send({ title: 'x' })
+    const { entries } = (await request(demo).get('/dev/audit')).body
+    expect(entries.at(-1)).toMatchObject({ userId: 'bob', action: 'task:edit', taskId: 'A2', allow: false, reason: 'not_assignee' })
+
+    const spec = await request(demo).get('/openapi.yaml')
+    expect(spec.status).toBe(200)
+    expect(spec.text).toContain('openapi: 3.1.0')
+    const docs = await request(demo).get('/docs/')
+    expect(docs.status).toBe(200)
+    expect(docs.text).toContain('swagger-ui')
+  })
+
   test('[S3] /dev/reset đưa dữ liệu về seed', async () => {
     db.deleteProject('alpha')
     const res = await request(demo).post('/dev/reset')

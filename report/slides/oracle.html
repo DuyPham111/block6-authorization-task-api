@@ -1,0 +1,47 @@
+<section id="oracle" data-transition="fade" style="background:#ECE7DC;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Evidence</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Test oracle qua từng phiên bản</h2>
+</div>
+<div style="display:flex;gap:48px;align-items:end;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">6</p>
+<div style="width:140px;height:132px;background:#9AA0A8;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">starter</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">7</p>
+<div style="width:140px;height:154px;background:#1F5FA8;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">v1</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">12</p>
+<div style="width:140px;height:264px;background:#1F5FA8;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">v2</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">14</p>
+<div style="width:140px;height:308px;background:#1F5FA8;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">v3</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700;color:#A3480A">15</p>
+<div style="width:140px;height:330px;background:#D98A4A;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#A3480A">v4-pre</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">17</p>
+<div style="width:140px;height:374px;background:#1F5FA8;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">v4</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center">
+<p style="font-size:40px;font-weight:700">17</p>
+<div style="width:140px;height:374px;background:#1B2430;border-radius:8px"></div>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px">final</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Số test oracle qua trên 17. Chạy bộ test cuối trên src của từng git tag. v4-pre là trạng thái cố ý sai (Admin toàn cục).</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · node scripts/oracle-matrix.js</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">13</p>
+<aside>Phần evidence. Em lập bảng giống slide 25 của thầy: lấy bộ test cuối cùng, chạy trên mã nguồn của từng git tag bằng script oracle-matrix.js. Starter qua 6 trên 17, đó là những request hợp lệ mà code chưa kiểm vẫn trả đúng. V1 lên 7, V2 lên 12, V3 lên 14. V4-pre lên 15 vì Dana đã tồn tại, nhưng hai test tenant vẫn đỏ. V4 đạt 17 trên 17. Bản final thêm GET /tasks và test nhất quán; bản nộp thêm audit log, OpenAPI, Docker, tổng cộng 84/84 test. Mỗi phiên bản còn có file before và after riêng trong docs/evidence, cùng một test, đỏ trước khi sửa và xanh sau khi sửa.</aside>
+</section>

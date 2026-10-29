@@ -1,4 +1,6 @@
 // PEP cho task: mọi entry point (route, job, export) đọc và sửa task qua service này.
+/** @typedef {import('../types').User} User */
+/** @typedef {import('../types').Task} Task */
 const db = require('../db')
 const { readableProjectIds } = require('../policy')
 const { loadTask, loadProject, enforce } = require('./access')
@@ -8,9 +10,15 @@ const { badRequest } = require('../errors')
 const EDITABLE_FIELDS = ['title', 'description', 'status']
 const STATUSES = ['Open', 'Closed']
 
+/**
+ * @param {Record<string, unknown>} body
+ * @param {string[]} fields
+ * @returns {Partial<Task>}
+ */
 const pick = (body, fields) =>
   Object.fromEntries(fields.filter(f => Object.hasOwn(body, f)).map(f => [f, body[f]]))
 
+/** @param {User} user @param {string} taskId */
 function getTask(user, taskId) {
   const resource = loadTask(taskId)
   enforce(user, 'task:read', resource)
@@ -18,6 +26,7 @@ function getTask(user, taskId) {
 }
 
 // Một quyết định cho cả project thay vì kiểm từng task (tránh N+1 truy vấn quyền).
+/** @param {User} user @param {string} projectId */
 function listProjectTasks(user, projectId) {
   const resource = loadProject(projectId)
   enforce(user, 'task:read', resource)
@@ -25,17 +34,23 @@ function listProjectTasks(user, projectId) {
 }
 
 // Danh sách mọi task người gọi được đọc: điều kiện quyền nằm trong truy vấn, không lọc sau khi tải.
+/** @param {User} user */
 function listVisibleTasks(user) {
   return db.listTasksInProjects(readableProjectIds(user))
 }
 
+/**
+ * @param {User} user
+ * @param {string} taskId
+ * @param {Record<string, unknown>} [body]
+ */
 function updateTask(user, taskId, body = {}) {
   const resource = loadTask(taskId)
   // Kiểm quyền trên bản ghi đang lưu, trước khi áp dụng bất kỳ thay đổi nào từ body.
   enforce(user, 'task:edit', resource)
 
   const patch = pick(body, EDITABLE_FIELDS)
-  if ('status' in patch && !STATUSES.includes(patch.status)) throw badRequest('invalid_status')
+  if ('status' in patch && !STATUSES.includes(String(patch.status))) throw badRequest('invalid_status')
   return db.updateTask(taskId, patch)
 }
 

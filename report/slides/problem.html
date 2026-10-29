@@ -1,0 +1,27 @@
+<section id="problem" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#A3480A">Vấn đề</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Token hợp lệ vẫn lộ dữ liệu người khác</h2>
+</div>
+<div style="display:flex;gap:48px;flex:1">
+<div style="flex:3;display:flex;flex-direction:column;gap:20px;background:#1B2430;border-radius:16px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#B9C0CC">$ curl /tasks/A1 -H "Bearer &lt;token Alice&gt;"</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#8DB8E8">HTTP/1.1 200 OK · task của project Alpha</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#B9C0CC">$ curl /tasks/B1 -H "Bearer &lt;token Alice&gt;"</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F0A35E">HTTP/1.1 200 OK · lộ dữ liệu project Beta</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F3EFE6">{"id":"B1","projectId":"beta",<br>&#160;"title":"Kế hoạch ra mắt Beta",<br>&#160;"description":"Dữ liệu nội bộ của project Beta"}</p>
+</div>
+<div style="flex:2;display:flex;flex-direction:column;gap:24px">
+<h3 style="font-size:40px;font-weight:700;line-height:1.2">Ba điều kiện của IDOR/BOLA</h3>
+<ol style="font-size:30px;line-height:1.4;color:#1B2430">
+<li>Client gửi object ID</li>
+<li>Token hợp lệ nên qua xác thực</li>
+<li>Server không kiểm quan hệ giữa người gọi và object</li>
+</ol>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Alice không thuộc project Beta. Starter chỉ kiểm token và scope.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">02</p>
+<aside>Đây là lỗi ban đầu, em chạy thật bằng curl, output nằm trong docs/evidence/v1-idor-curl-before.txt. Alice là Owner của Alpha, token hoàn toàn hợp lệ. Alice đọc A1 thì đúng. Nhưng chỉ cần đổi ID thành B1 là đọc được dữ liệu nội bộ của project Beta. Đủ ba điều kiện của IDOR/BOLA: ID do client gửi, token hợp lệ, và server không kiểm quan hệ giữa người gọi với object. Thông điệp chính: xác thực đúng không có nghĩa là được phép.</aside>
+</section>

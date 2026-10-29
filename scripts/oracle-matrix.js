@@ -6,7 +6,7 @@ const os = require('node:os')
 const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '..')
-const TAGS = ['starter', 'v1', 'v2', 'v3', 'v4-pre', 'v4', 'final']
+const TAGS = ['starter', 'v1', 'v2', 'v3', 'v4-pre', 'v4', 'final', 'submit']
 const JEST = path.join(ROOT, 'node_modules', 'jest', 'bin', 'jest.js')
 
 function runAgainst(tag) {

@@ -1,0 +1,25 @@
+<section id="c-data" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 6/11 · Lưu dữ liệu</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">In-memory, dataset ở data/seed.json</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Trọng tâm là phân quyền; máy chấm không cần cài cơ sở dữ liệu</p>
+<p style="font-size:30px;line-height:1.35">resetDb() trước mỗi test: 84 test độc lập, chạy khoảng 2 giây</p>
+<p style="font-size:30px;line-height:1.35">Dataset tách ra file JSON để nộp kèm, sửa không đụng code</p>
+<p style="font-size:30px;line-height:1.35">Policy không phụ thuộc cách lưu: đổi sang SQL chỉ sửa db.js</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>PostgreSQL</b>: phải cài thêm, test chậm, không thêm giá trị cho bài</p>
+<p style="font-size:30px;line-height:1.35"><b>node:sqlite</b> như Block 5: Block 6 không có yêu cầu transaction</p>
+<p style="font-size:30px;line-height:1.35"><b>MongoDB</b>: dữ liệu quan hệ user ↔ project ↔ task hợp bảng hơn</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> chưa đo JOIN với dữ liệu lớn; với DB thật cần UPDATE có điều kiện để chống TOCTOU (Block 7).</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.11</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">20</p>
+<aside>Dữ liệu chạy trong RAM, nạp từ data/seed.json. Trọng tâm của bài là logic phân quyền, nên nhóm không muốn máy chấm phải cài cơ sở dữ liệu. resetDb chạy trước mỗi test nên 84 test độc lập, cả bộ khoảng 2 giây. Dataset tách ra file JSON để nộp kèm như mẫu của môn, sửa dataset không phải đụng code. Service và policy không phụ thuộc cách lưu, đổi sang SQL chỉ cần sửa db.js. Block 5 nhóm chọn node:sqlite vì cần transaction thật để chứng minh đổi code một lần; Block 6 không có yêu cầu transaction nào. Đánh đổi: chưa đo hiệu năng JOIN với dữ liệu lớn. Với DB thật, bước kiểm rồi ghi có cửa sổ TOCTOU, xử lý bằng UPDATE có điều kiện hoặc transaction, đúng nội dung Block 7.</aside>
+</section>

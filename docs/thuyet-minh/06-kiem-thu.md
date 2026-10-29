@@ -9,11 +9,12 @@
 | `test/v3.rebac-abac.test.js` | 10 | O11–O14, tự gán assignee, mở lại task, kết hợp mô hình |
 | `test/v4.tenant.test.js` | 8 | O15–O17, giả mạo tenantId, membership chéo tenant |
 | `test/consistency.test.js` | 8 | Check và list khớp nhau cho mọi user × task, thu hồi quyền |
-| `test/policy.unit.test.js` | 12 | Unit test PDP: lý do từng nhánh, role lạ, action chưa khai báo |
-| `test/demo.test.js` | 3 | Server demo tách biệt: app chính không có `/dev/token`, request demo vẫn qua phân quyền thật |
-| **Tổng** | **73** | Coverage: 98.9% dòng `src/`, `policy.js` 100% nhánh |
+| `test/policy.unit.test.js` | 13 | Unit test PDP: lý do từng nhánh, role lạ, action chưa khai báo, thiếu dữ liệu (fail closed) |
+| `test/demo.test.js` | 4 | Server demo tách biệt: app chính không có `/dev/token`; request demo vẫn qua phân quyền thật; audit, Swagger |
+| `test/ops.test.js` | 9 | Health, header, JSON lỗi, body lớn, secret production, audit log, OpenAPI khớp route |
+| **Tổng** | **84** | Coverage `src/`: 98,5% dòng, `policy.js` 100% nhánh |
 
-Ký hiệu trong tên test: `[O*]` test oracle của bài, `[M*]` ô ma trận, `[E*]` bổ sung, `[C*]` nhất quán, `[U*]` unit, `[S*]` server demo.
+Ký hiệu trong tên test: `[O*]` test oracle của bài, `[M*]` ô ma trận, `[E*]` bổ sung, `[C*]` nhất quán, `[U*]` unit, `[S*]` server demo, `[P*]` vận hành, `[L*]` audit log, `[D*]` tài liệu.
 
 ## Nguyên tắc viết test
 
@@ -34,7 +35,7 @@ Sinh bởi `node scripts/oracle-matrix.js` (`docs/evidence/oracle-matrix.md`):
 | Oracle qua | 6/17 | 7/17 | 12/17 | 14/17 | 15/17 | 17/17 | 17/17 |
 | Toàn bộ test qua | 16/58* | 23/70 | 46/70 | 52/70 | 54/70 | 62/70 | **70/70** |
 
-\* Ở starter, file unit test PDP không nạp được vì chưa có `policy.js`. Bảng này và mục "từ chối hết" bên dưới đo tại tag `final` (70 test), trước khi thêm trang demo và 3 test `[S*]`.
+\* Ở starter, file unit test PDP không nạp được vì chưa có `policy.js`. Bảng này và mục "từ chối hết" bên dưới đo tại tag `final` (70 test), trước khi thêm trang demo, audit log, OpenAPI và các test `[S*]`, `[P*]`, `[L*]`, `[D*]`. Bản nộp (tag `submit`) chạy đủ 84/84.
 
 ## Trang demo
 
@@ -76,7 +77,7 @@ Em tạo một biến thể sai trong thư mục tạm: `decide()` luôn trả d
 Đ: Một lỗi thường gặp là code ghi xong rồi mới kiểm quyền và báo lỗi. Response vẫn là 403 nhưng dữ liệu đã bị sửa. Chỉ kiểm mã lỗi thì không phát hiện được.
 
 **H: Coverage bao nhiêu? Chỗ nào chưa phủ?**
-Đ: 98.9% số dòng. `policy.js` phủ 100% nhánh. Phần chưa phủ là nhánh lỗi 500 trong `app.js`, nhánh token có `sub` không tồn tại trong `auth.js`, và một vài nhánh validate (thêm thành viên trùng). Không phần nào trong đó thuộc logic quyết định quyền.
+Đ: 98,5% số dòng của `src/`. `policy.js` phủ 100% dòng và nhánh. Phần chưa phủ là nhánh lỗi 500 trong `app.js`, nhánh `sub` không tồn tại trong `auth.js`, vài nhánh validate (thêm thành viên trùng) và nhánh project mồ côi trong `access.js`. Không phần nào trong đó thuộc logic quyết định quyền.
 
 **H: Trường hợp nào em chưa kiểm tra?**
 Đ: Concurrency (đổi quyền đúng lúc PATCH), cache quyền, các entry point ngoài HTTP như job nền, hiệu năng với DB thật, và chia sẻ riêng một task. Tất cả đã ghi trong `docs/explanation.md` mục 5, kèm hướng xử lý.

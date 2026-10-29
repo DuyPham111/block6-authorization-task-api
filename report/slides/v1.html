@@ -1,0 +1,35 @@
+<section id="v1" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V1 · IDOR/BOLA</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">V1: kiểm quyền trên từng object</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#1B2430;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#F0A35E">Trước · starter</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F3EFE6">router.get('/:id', (req, res) =&gt; {<br>&#160;&#160;const task = db.findTask(req.params.id)<br>&#160;&#160;if (!task) throw notFound()<br>&#160;&#160;res.json(task)<br>})</p>
+<p style="font-size:24px;line-height:1.4;color:#B9C0CC">Chỉ hỏi "task có tồn tại không", không hỏi "Alice có liên quan không".</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#1B2430;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#8DB8E8">Sau · V1 trong taskService</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F3EFE6">function getTask(user, taskId) {<br>&#160;&#160;const resource = loadTask(taskId)<br>&#160;&#160;enforce(user, 'task:read', resource)<br>&#160;&#160;return resource.task<br>}</p>
+<p style="font-size:24px;line-height:1.4;color:#B9C0CC">Project suy ra từ task trong DB. Không phải thành viên thì 404.</p>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:32px">
+<p style="font-size:40px;font-weight:700;color:#1F5FA8">200 → 404</p>
+<p style="font-size:24px;line-height:1.4">Alice đọc B1, body giống hệt task không tồn tại</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:32px">
+<p style="font-size:40px;font-weight:700;color:#1F5FA8">5 đỏ → 11/11</p>
+<p style="font-size:24px;line-height:1.4">Test V1 chạy trên starter rồi sau khi sửa</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:32px">
+<p style="font-size:40px;font-weight:700;color:#1F5FA8">2 đường đọc</p>
+<p style="font-size:24px;line-height:1.4">/tasks/:id và /projects/:id/tasks cùng enforce</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · git diff starter v1</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">06</p>
+<aside>V1. Bên trái là code starter: chỉ kiểm task có tồn tại không. Bên phải là bản sửa: route gọi taskService.getTask. Service nạp task từ DB, suy ra project từ task.projectId, rồi gọi enforce với action task:read. Em không dùng middleware vì URL /tasks/B1 không có projectId, mà lấy projectId từ request là tin client. Em viết test trước, chạy trên starter thấy 5 test đỏ, sửa xong 11/11 xanh. Evidence nằm trong docs/evidence/v1-before.txt và v1-after.txt. UUID không thay được bước này, vì ID vẫn lộ qua log, email hay link chia sẻ.</aside>
+</section>

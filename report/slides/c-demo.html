@@ -1,0 +1,24 @@
+<section id="c-demo" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 11/11 · Trang demo</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">HTML thuần trên server demo riêng</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Chọn người gọi, gửi request, xem quyết định PDP và dữ liệu không đổi</p>
+<p style="font-size:30px;line-height:1.35">Chạy 21 kịch bản trong khoảng 0,3 giây, kết luận Đạt hoặc Sai</p>
+<p style="font-size:30px;line-height:1.35">/dev/token chỉ nằm trên server 127.0.0.1, không có trong app chính (S1)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>React / Vue</b>: cần bước build cho một trang khoảng 500 dòng</p>
+<p style="font-size:30px;line-height:1.35"><b>/dev/* trong app khi NODE_ENV=dev</b>: đặt sai biến là thành cửa sau</p>
+<p style="font-size:30px;line-height:1.35"><b>Chỉ Postman</b>: không cho thấy lý do của PDP và dữ liệu không đổi</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> máy khác không gọi được server demo; nhóm khác muốn thử thì clone repository và chạy npm run demo trên máy mình.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · npm run demo → localhost:3100/demo</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">25</p>
+<aside>Lựa chọn cuối là trang demo cho buổi thuyết trình. Đây là một trang HTML và JavaScript thuần trên một server demo riêng. Server demo bọc chính app thật và thêm /demo, /docs, /dev/token, /dev/reset, /dev/state, /dev/audit. Trên trang, chọn người gọi, gửi request, xem response, lệnh curl tương đương, quyết định của PDP lấy từ audit log, và bảng dữ liệu cho thấy request bị từ chối không làm đổi gì. Nút chạy tất cả chạy 21 kịch bản trong khoảng 0,3 giây. Vì /dev/token cấp token cho bất kỳ ai, server demo chỉ nghe trên 127.0.0.1 và không bao giờ được mount vào app chính; test S1 gọi /dev/token vào app chính thì nhận 401 hoặc 404. Không dùng React hay Vue vì cần bước build. Không mount /dev vào app theo biến môi trường, vì đặt sai biến là thành cửa sau trên production.</aside>
+</section>

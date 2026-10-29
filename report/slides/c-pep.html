@@ -1,0 +1,25 @@
+<section id="c-pep" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 5/11 · Policy Enforcement Point</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Kiểm quyền ở service, không ở controller</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Ba đường đọc task cùng đi qua một chỗ: /tasks/:id, /tasks, /projects/:id/tasks</p>
+<p style="font-size:30px;line-height:1.35">Service nạp resource từ DB: project suy ra từ task.projectId</p>
+<p style="font-size:30px;line-height:1.35">Route không import db (grep kiểm chứng); entry point mới tự được bảo vệ</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>Controller</b>: route nào quên kiểm là lọt</p>
+<p style="font-size:30px;line-height:1.35"><b>Middleware chung</b>: chạy trước khi biết task thuộc project nào</p>
+<p style="font-size:30px;line-height:1.35"><b>API gateway</b>: không biết quan hệ thành viên, assignee</p>
+<p style="font-size:30px;line-height:1.35"><b>Ẩn nút ở frontend</b>: curl bỏ qua giao diện (O6)</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> service ném HttpError 403/404 nên biết một chút về HTTP; tách chặt hơn thì ném lỗi miền và map ở lớp ngoài.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.7</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">19</p>
+<aside>PEP đặt ở business layer. Lý do số một: cùng một task có ba đường đọc là /tasks/:id, /tasks và /projects/:id/tasks; sau này có thể thêm export CSV hay job nhắc việc. Slide 17 của thầy cho thấy kiểm ở controller thì route nào quên là lọt. Service nạp resource từ DB, project suy ra từ task.projectId chứ không lấy projectId từ request. Không dùng middleware chung vì URL /tasks/B1 không có projectId; middleware chạy trước khi nạp resource, muốn biết project phải lấy từ request, tức là tin client. API gateway chỉ kiểm được token và scope, không biết quan hệ thành viên hay assignee. Ẩn nút ở frontend thì curl bỏ qua, test O6. Đánh đổi: service ném HttpError nên biết chút HTTP; tách chặt hơn thì ném lỗi miền, không ảnh hưởng policy.</aside>
+</section>

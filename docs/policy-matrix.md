@@ -48,8 +48,11 @@ Quyết định: `allow(subject, action, resource)` trong [src/policy.js](../src
 | Viewer × 4 action | M1, O5, M2, M3 |
 | Member × 4 action | M4, M5, O6, O7 |
 | Owner × 4 action | M6, M7, O8, O9 |
-| Tenant boundary | O16, O17, E22, E23, E25 |
+| Tenant boundary | O16, O17, E22, E23, E25; ở bản cuối cũng chặn O3, O14, E4, E14 (B1/Beta thuộc tenant khác) |
 | Admin trong tenant | O15, E24 |
-| ReBAC (không phải thành viên) | O3, O14, E4, E14, E21 |
+| ReBAC (cùng tenant, không phải thành viên) | E21, E5, C3, L1 (Erin đọc A1); ở V1–V3 (chưa có tenant) chặn O3, O14, E4, E14 |
 | ABAC assignee / status | O11, O12, O13, E3, E16, E17, E18, E20 |
 | Không tin dữ liệu client | O10, O17, E3, E6, E9, E12, E22 |
+| Lý do từng nhánh, role lạ, action lạ, thiếu dữ liệu | U1–U5 |
+
+Mỗi quyết định được ghi vào audit log (`src/audit.js`) kèm `reason` của nhánh tương ứng: `other_tenant`, `tenant_admin`, `not_member`, `role_lacks_permission`, `not_assignee`, `task_closed`, `missing_task`, `role:<Role>`. Client không thấy lý do này.

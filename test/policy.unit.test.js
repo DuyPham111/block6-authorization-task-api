@@ -38,6 +38,11 @@ describe('PDP decide() - lý do của từng nhánh', () => {
     },
   )
 
+  test('[U5] Member sửa nhưng thiếu dữ liệu task -> từ chối (fail closed)', () => {
+    const decision = decide(db.findUser('bob'), 'task:edit', { project: db.findProject('alpha') })
+    expect(decision).toMatchObject({ allow: false, reason: 'missing_task' })
+  })
+
   test('[U4] Action chưa khai báo trong policy bị từ chối, kể cả với Owner', () => {
     const decision = decide(db.findUser('alice'), 'project:export', resourceOfTask('A1'))
     expect(decision.allow).toBe(false)

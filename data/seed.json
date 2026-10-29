@@ -1,0 +1,30 @@
+{
+  "tenants": [
+    { "id": "alpha", "name": "Tenant Alpha" },
+    { "id": "beta", "name": "Tenant Beta" }
+  ],
+  "users": [
+    { "id": "alice", "name": "Alice", "tenantId": "alpha" },
+    { "id": "bob", "name": "Bob", "tenantId": "alpha" },
+    { "id": "vera", "name": "Vera", "tenantId": "alpha" },
+    { "id": "erin", "name": "Erin", "tenantId": "alpha" },
+    { "id": "dana", "name": "Dana", "tenantId": "alpha", "tenantRole": "Admin" },
+    { "id": "charlie", "name": "Charlie", "tenantId": "beta" }
+  ],
+  "projects": [
+    { "id": "alpha", "name": "Project Alpha", "tenantId": "alpha" },
+    { "id": "beta", "name": "Project Beta", "tenantId": "beta" }
+  ],
+  "members": [
+    { "projectId": "alpha", "userId": "alice", "role": "Owner" },
+    { "projectId": "alpha", "userId": "bob", "role": "Member" },
+    { "projectId": "alpha", "userId": "vera", "role": "Viewer" },
+    { "projectId": "beta", "userId": "charlie", "role": "Owner" }
+  ],
+  "tasks": [
+    { "id": "A1", "projectId": "alpha", "title": "Thiết kế màn hình đăng nhập", "description": "Wireframe và luồng lỗi", "assignee": "bob", "status": "Open" },
+    { "id": "A2", "projectId": "alpha", "title": "Viết tài liệu API", "description": "OpenAPI cho /tasks", "assignee": null, "status": "Open" },
+    { "id": "B1", "projectId": "beta", "title": "Kế hoạch ra mắt Beta", "description": "Dữ liệu nội bộ của project Beta", "assignee": "charlie", "status": "Open" },
+    { "id": "B2", "projectId": "beta", "title": "Báo cáo doanh thu quý 3", "description": "Số liệu tài chính", "assignee": null, "status": "Open" }
+  ]
+}

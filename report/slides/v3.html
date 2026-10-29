@@ -1,0 +1,25 @@
+<section id="v3" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V3 · ReBAC + ABAC</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">V3: ba lớp, mỗi lớp một câu hỏi</h2>
+</div>
+<table style="font-size:30px;color:#1B2430">
+<tr style="background:#ECE7DC"><th style="width:14%">Lớp</th><th style="width:40%">Câu hỏi</th><th style="width:46%">Thiếu lớp này thì</th></tr>
+<tr><td>ReBAC</td><td>Có thuộc project chứa task không?</td><td>Bob sửa được B1 của Beta (O14)</td></tr>
+<tr><td>RBAC</td><td>Role có được loại thao tác này?</td><td>Viewer sửa được task (O5)</td></tr>
+<tr><td>ABAC</td><td>Task này giao cho mình, còn Open?</td><td>Bob sửa A2 chưa giao (O12), task đã đóng (O13)</td></tr>
+</table>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3;color:#1F5FA8">E20 · Viewer được giao task vẫn 403</p>
+<p style="font-size:24px;line-height:1.4">Assignee không thay được role</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:32px">
+<p style="font-size:30px;font-weight:700;line-height:1.3;color:#1F5FA8">E21 · Assignee bị gỡ khỏi project: 404</p>
+<p style="font-size:24px;line-height:1.4">Assignee không thay được quan hệ thành viên</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · git diff v2 v3: 1 file, +7 dòng</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">09</p>
+<aside>V3 kết hợp ba mô hình, mỗi lớp trả lời một câu hỏi khác nhau. ReBAC: người gọi có quan hệ với project chứa task không. RBAC: role có được loại thao tác này không. ABAC: với task cụ thể này, có được giao cho mình và còn Open không. Hai test chứng minh không lớp nào thay được lớp khác. E20: Viewer được giao task vẫn không sửa được. E21: Bob vẫn ghi là assignee nhưng đã bị gỡ khỏi project, nên không sửa được. Nhờ PDP tách riêng, V3 chỉ thêm 7 dòng trong một file. Owner không bị ràng buộc assignee, vì Owner quản lý cả project. Quyết định này đã ghi trong bảng chính sách, có test E17 và E18.</aside>
+</section>

@@ -1,0 +1,35 @@
+<section id="v4" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">V4 · Tenant boundary</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">V4: tenant boundary đứng trước Admin</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#1B2430;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#F0A35E">v4-pre · cố ý sai để tái hiện</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F3EFE6">// Admin bị coi là toàn cục<br>if (user.tenantRole === 'Admin')<br>&#160;&#160;return allow('admin')<br>// ... ReBAC, RBAC, ABAC</p>
+<p style="font-size:24px;line-height:1.4;color:#F0A35E">Dana đọc được B1 và xóa được project Beta</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#1B2430;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#8DB8E8">v4 · tenant kiểm đầu tiên</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.5;color:#F3EFE6">if (user.tenantId !== project.tenantId)<br>&#160;&#160;return deny('other_tenant')&#160;&#160;// 404<br>if (user.tenantRole === 'Admin')<br>&#160;&#160;return allow('tenant_admin')</p>
+<p style="font-size:24px;line-height:1.4;color:#8DB8E8">Dana nhận 404, project Beta còn nguyên</p>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">Tenant đọc từ DB</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">X-Tenant-Id: beta bị bỏ qua (O17, E22)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3">Phòng thủ nhiều lớp</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Membership chéo tenant vẫn bị chặn (E25)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#DCE6F2;border-radius:16px;padding:24px">
+<p style="font-size:30px;font-weight:700;line-height:1.3;color:#1F5FA8">6 đỏ → 8/8 xanh</p>
+<p style="font-size:24px;line-height:1.4">Oracle 15 → 17/17</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · git diff v4-pre v4: 2 file, +8 −3 dòng</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">11</p>
+<aside>V4 em làm hai bước để có evidence thật. Bước một, tag v4-pre: thêm tenant và Dana là Admin tenant Alpha, nhưng kiểm Admin trước. Đây đúng là trạng thái "Admin toàn cục". Kết quả: Dana đọc được B1 và xóa được project Beta, 6 test đỏ. Bước hai: đưa tenant check lên đầu, Admin chỉ có toàn quyền trong tenant của mình. Tenant của người gọi lấy từ bản ghi user trong DB, nên header X-Tenant-Id hay tenantId trong body đều bị bỏ qua. Test E25 cố ý chèn membership chéo tenant để chứng minh tenant check vẫn chặn, kể cả khi dữ liệu bị lỗi. Production nên thêm Row-Level Security ở DB làm lớp thứ hai.</aside>
+</section>

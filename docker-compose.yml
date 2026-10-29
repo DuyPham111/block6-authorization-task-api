@@ -1,0 +1,12 @@
+# docker compose up --build   →   API tại http://localhost:3000 (health: /health)
+services:
+  api:
+    build: .
+    image: task-api:block6
+    ports:
+      - "3000:3000"
+    environment:
+      # Bắt buộc: compose dừng ngay nếu chưa đặt JWT_SECRET (trong .env cạnh file này hoặc biến môi trường).
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET chua duoc dat, xem .env.example}
+      AUDIT_LOG: ${AUDIT_LOG:-deny}
+    restart: unless-stopped

@@ -1,0 +1,32 @@
+<section id="demo" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#A3480A">Demo</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Demo: chạy lại mọi evidence</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:32px;align-items:center;background:#1B2430;border-radius:12px;padding:20px 32px">
+<p style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F3EFE6">npm run check</p>
+<p style="flex:2;font-size:24px;color:#B9C0CC">Kiểm kiểu + 84/84 test, gồm 17 oracle</p>
+</div>
+<div style="display:flex;gap:32px;align-items:center;background:#1B2430;border-radius:12px;padding:20px 32px">
+<p style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F3EFE6">npm run demo</p>
+<p style="flex:2;font-size:24px;color:#B9C0CC">/demo: 21 kịch bản · /docs: Swagger UI</p>
+</div>
+<div style="display:flex;gap:32px;align-items:center;background:#1B2430;border-radius:12px;padding:20px 32px">
+<p style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F3EFE6">bash scripts/demo-idor.sh</p>
+<p style="flex:2;font-size:24px;color:#B9C0CC">Alice: A1 trả 200, B1 trả 404</p>
+</div>
+<div style="display:flex;gap:32px;align-items:center;background:#1B2430;border-radius:12px;padding:20px 32px">
+<p style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F3EFE6">bash scripts/test-against.sh starter test/v1.idor.test.js</p>
+<p style="flex:2;font-size:24px;color:#B9C0CC">Cùng test đó, đỏ trên code starter</p>
+</div>
+<div style="display:flex;gap:32px;align-items:center;background:#1B2430;border-radius:12px;padding:20px 32px">
+<p style="flex:3;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#F3EFE6">docker compose up --build</p>
+<p style="flex:2;font-size:24px;color:#B9C0CC">Container non-root, kiểm /health</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Muốn tự thử: <b>npm run token -- alice</b> rồi gọi curl, hoặc dán token vào Authorize trên Swagger UI.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · README.md</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">28</p>
+<aside>Phần demo trực tiếp. Một, npm run check: kiểm kiểu và chạy 84 test trong vài giây. Hai, npm run demo: mở localhost:3100/demo, chọn người gọi rồi chạy từng kịch bản hoặc cả 21 kịch bản; ô response hiện quyết định của PDP lấy từ audit log, bảng dữ liệu cho thấy request bị từ chối không làm đổi gì; mở thêm /docs để thấy Swagger UI. Ba, demo-idor.sh: Alice đọc A1 được 200, B1 bị 404. Bốn, test-against.sh: cùng bộ test V1 đỏ trên code starter, tức test thật sự bắt được lỗi. Năm, nếu có Docker: docker compose up, rồi gọi /health. Muốn tự thử thì in token bằng npm run token rồi gọi curl, hoặc dán vào Authorize trên Swagger.</aside>
+</section>

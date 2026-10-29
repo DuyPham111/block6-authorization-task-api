@@ -1,0 +1,52 @@
+{
+  "v": 4,
+  "createdOnFiles": { "v": 1, "at": "2026-10-29T09:30:00Z" },
+  "lists": "css",
+  "title": "Block 6 – Authorization & Access Control",
+  "cover": "cover",
+  "order": [
+    "cover",
+    "problem",
+    "layers",
+    "arch",
+    "decide",
+    "v1",
+    "codes",
+    "v2",
+    "v3",
+    "v3-body",
+    "v4",
+    "checklist",
+    "oracle",
+    "denyall",
+    "c-stack",
+    "c-token",
+    "c-model",
+    "c-engine",
+    "c-pep",
+    "c-data",
+    "c-test",
+    "c-docs",
+    "c-log",
+    "c-deploy",
+    "c-demo",
+    "tradeoffs",
+    "limits",
+    "demo",
+    "exit",
+    "thanks"
+  ],
+  "sections": {
+    "van-de": { "description": "Vấn đề: token hợp lệ nhưng server không kiểm quyền trên từng object", "start": "cover" },
+    "giai-phap": { "description": "Giải pháp: PEP/PDP và bốn phiên bản V1 đến V4", "start": "arch" },
+    "evidence": { "description": "Evidence: test đỏ trước, xanh sau, và kiểm tra ngược bản từ chối hết", "start": "oracle" },
+    "lua-chon": { "description": "Các lựa chọn của nhóm: chọn gì, không chọn gì, vì sao, đánh đổi chấp nhận", "start": "c-stack" },
+    "tradeoff": { "description": "Tóm tắt lựa chọn, giới hạn và cách demo", "start": "tradeoffs" },
+    "ket": { "description": "Câu hỏi kết thúc và hỏi đáp", "start": "exit" }
+  },
+  "faces": {
+    "be-vietnam-pro": { "family": "Be Vietnam Pro", "href": "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" },
+    "jetbrains-mono": { "family": "JetBrains Mono", "href": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" }
+  },
+  "designSystems": []
+}

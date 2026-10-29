@@ -1,0 +1,13 @@
+node_modules
+.git
+.env
+coverage
+test
+demo
+docs
+report
+scripts
+*.md
+REPORT.html
+Dockerfile
+docker-compose.yml

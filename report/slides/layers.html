@@ -1,0 +1,38 @@
+<section id="layers" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#A3480A">Vấn đề</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Ba lớp kiểm tra của một request</h2>
+</div>
+<div style="display:flex;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#5B616B">Lớp 1</p>
+<h3 style="font-size:40px;font-weight:700;line-height:1.15">Authentication</h3>
+<p style="font-size:30px;line-height:1.4">Người gọi là ai?</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.4;color:#5B616B">JWT: chữ ký, exp, sub</p>
+<div style="flex:1"></div>
+<p style="font-size:24px;font-weight:600;color:#1F5FA8;background:#DCE6F2;padding:8px 16px;border-radius:8px">Thiếu, sai, hết hạn → 401</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:48px;height:24px;background:#9AA0A8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#5B616B">Lớp 2</p>
+<h3 style="font-size:40px;font-weight:700;line-height:1.15">OAuth2 scope</h3>
+<p style="font-size:30px;line-height:1.4">Token được cấp loại quyền gì?</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.4;color:#5B616B">scope = tasks:read</p>
+<div style="flex:1"></div>
+<p style="font-size:24px;font-weight:600;color:#1F5FA8;background:#DCE6F2;padding:8px 16px;border-radius:8px">Thiếu scope → 403 insufficient_scope</p>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center"><x-shape kind="arrow-right" style="width:48px;height:24px;background:#9AA0A8"></x-shape></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FBFAF7;border:3px solid #A3480A;border-radius:16px;padding:40px">
+<p style="font-size:24px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#A3480A">Lớp 3 · starter thiếu</p>
+<h3 style="font-size:40px;font-weight:700;line-height:1.15">Authorization</h3>
+<p style="font-size:30px;line-height:1.4">Được làm action này trên resource này không?</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;line-height:1.4;color:#5B616B">membership, role, assignee, status, tenant</p>
+<div style="flex:1"></div>
+<p style="font-size:24px;font-weight:600;color:#9A3F07;background:#F6E0C8;padding:8px 16px;border-radius:8px">Không được phép → 403 hoặc 404</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B">Test E7: token chỉ có <b>tasks:read</b> đọc được A1 nhưng vẫn nhận 404 với B1. Scope không thay được kiểm quyền.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">03</p>
+<aside>Mỗi request đi qua ba lớp. Lớp 1, authentication: người gọi là ai, lỗi thì 401. Lớp 2, OAuth2 scope: token được cấp loại quyền gì, thiếu thì 403 insufficient_scope theo RFC 6750. Lớp 3, authorization: người này có được làm action này trên resource cụ thể này không. Starter có lớp 1 và lớp 2 nhưng thiếu lớp 3. Test E7 cho thấy scope không thay được kiểm quyền: token chỉ có tasks:read vẫn không đọc được B1. Nếu thầy hỏi "có scope rồi sao cần kiểm quyền": scope giới hạn token, kiểm quyền giới hạn người dùng trên từng object.</aside>
+</section>

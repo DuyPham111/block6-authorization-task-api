@@ -1,0 +1,25 @@
+<section id="c-log" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 9/11 · Logging và audit</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Audit log JSON Lines, lý do chỉ ở server</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Mỗi quyết định ghi userId, action, resource, allow, reason</p>
+<p style="font-size:30px;line-height:1.35">Client chỉ nhận 404 chung, server vẫn biết vì sao (L1)</p>
+<p style="font-size:30px;line-height:1.35">Nhiều 404 liên tiếp từ một user là dấu hiệu dò ID</p>
+<p style="font-size:30px;line-height:1.35">Docker, ELK, Loki đều gom được log stdout dạng này, không đổi code</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>ELK trong lab</b>: nặng; ELK là nơi gom log, không phải cách ghi log</p>
+<p style="font-size:30px;line-height:1.35"><b>winston / pino</b>: thêm dependency cho một loại sự kiện</p>
+<p style="font-size:30px;line-height:1.35"><b>Lý do trong response</b>: lộ chính sách cho kẻ tấn công</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> chưa có correlation id theo request; request bị chặn ở lớp 401 hay scope chưa ghi audit.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · src/audit.js · AUDIT_LOG=off|deny|all</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">23</p>
+<aside>Logging: mỗi lần enforce ghi một dòng JSON ra stdout, gồm userId, action, projectId, taskId, allow và reason. Mức ghi chỉnh bằng biến AUDIT_LOG: off, deny hoặc all; mặc định deny, khi chạy test thì off. Ý nghĩa: client chỉ nhận 404 chung chung, nhưng server biết vì sao, ví dụ other_tenant hay not_member. Test L1 cho thấy hai lần bị chặn với lý do khác nhau trả cùng một body, nhưng log ghi đúng từng lý do. Nhiều 404 liên tiếp từ một user là dấu hiệu dò ID. Thầy có ví dụ ELK: ELK là nơi gom và tìm kiếm log, còn việc của app là ghi log đúng định dạng. JSON Lines ra stdout thì Filebeat, Loki hay Docker logging driver đều đọc được, không phải sửa code. Không dùng winston hay pino vì chỉ có một loại sự kiện. Log không chứa token hay nội dung task.</aside>
+</section>

@@ -1,0 +1,273 @@
+openapi: 3.1.0
+info:
+  title: Task Management API – Block 6 Authorization
+  version: 1.0.0
+  description: |
+    API quản lý task có xác thực JWT (sub + scope) và **kiểm quyền trên từng resource tại server**.
+
+    Ba lớp kiểm tra cho mỗi request:
+    1. **Authentication**: thiếu, sai chữ ký, hết hạn token → `401`.
+    2. **OAuth2 scope**: token thiếu scope cho loại thao tác → `403 insufficient_scope`.
+    3. **Authorization (PDP `decide()`)**, theo thứ tự: tenant boundary → Admin của tenant → thành viên project (ReBAC) → permission của role (RBAC) → assignee + status (ABAC).
+       Ngoài project hoặc ngoài tenant → `404` (che sự tồn tại); cùng project nhưng không đủ quyền → `403`.
+
+    Role, tenant, assignee, status luôn đọc từ dữ liệu server. Giá trị `role`, `userId`, `tenantId` trong body, query hay header (ví dụ `X-Tenant-Id`) **bị bỏ qua**.
+
+    Lấy token để thử: trang demo `http://localhost:3100/demo/` hoặc `npm run token -- alice`, rồi bấm **Authorize**.
+servers:
+  - url: /
+    description: Cùng origin (server demo cổng 3100 hoặc API cổng 3000)
+security:
+  - bearerAuth: []
+tags:
+  - name: Tasks
+  - name: Projects
+  - name: Vận hành
+paths:
+  /health:
+    get:
+      tags: [Vận hành]
+      summary: Health check cho Docker hoặc load balancer
+      security: []
+      responses:
+        '200':
+          description: Server đang chạy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, const: ok }
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: Danh sách mọi task người gọi được đọc
+      description: |
+        Điều kiện quyền nằm trong truy vấn (`readableProjectIds`), không lọc sau khi tải; khớp với `GET /tasks/{id}` (test C1).
+        Scope: `tasks:read`.
+      x-required-scope: tasks:read
+      responses:
+        '200':
+          description: Các task thuộc project người gọi là thành viên (hoặc mọi project trong tenant nếu là Admin)
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Task' } }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/InsufficientScope' }
+  /tasks/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      tags: [Tasks]
+      summary: Đọc một task
+      description: 'Scope: `tasks:read`. Policy action: `task:read`.'
+      x-required-scope: tasks:read
+      x-policy-action: task:read
+      responses:
+        '200':
+          description: Task
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/InsufficientScope' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Tasks]
+      summary: Sửa task
+      description: |
+        Scope: `tasks:write`. Policy action: `task:edit`.
+        Owner sửa mọi task trong project; Member chỉ sửa task được giao cho mình và còn `Open`; Viewer không sửa được.
+        Quyền được kiểm trên **bản ghi đang lưu**, trước khi áp dụng body. Chỉ `title`, `description`, `status` được nhận; field khác bị bỏ qua.
+      x-required-scope: tasks:write
+      x-policy-action: task:edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TaskPatch' }
+      responses:
+        '200':
+          description: Task sau khi sửa
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /projects/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    delete:
+      tags: [Projects]
+      summary: Xóa project (kèm task và thành viên)
+      description: 'Scope: `projects:manage`. Policy action: `project:delete` (Owner hoặc Admin của tenant).'
+      x-required-scope: projects:manage
+      x-policy-action: project:delete
+      responses:
+        '204': { description: Đã xóa }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /projects/{id}/tasks:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      summary: Danh sách task của một project
+      description: 'Scope: `tasks:read`. Policy action: `task:read` (một quyết định cho cả project).'
+      x-required-scope: tasks:read
+      x-policy-action: task:read
+      responses:
+        '200':
+          description: Các task của project
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Task' } }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/InsufficientScope' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /projects/{id}/members:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [Projects]
+      summary: Thêm thành viên vào project
+      description: |
+        Scope: `projects:manage`. Policy action: `member:manage` (Owner hoặc Admin của tenant).
+        `role` trong body là role của **người được thêm**; phải thuộc Viewer, Member, Owner. Người được thêm phải cùng tenant với project.
+      x-required-scope: projects:manage
+      x-policy-action: member:manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MemberCreate' }
+      responses:
+        '201':
+          description: Thành viên mới
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Membership' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /projects/{id}/members/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: userId
+        in: path
+        required: true
+        schema: { type: string, examples: [bob] }
+    delete:
+      tags: [Projects]
+      summary: Gỡ thành viên khỏi project (thu hồi quyền có hiệu lực ngay)
+      description: 'Scope: `projects:manage`. Policy action: `member:manage`. Không gỡ được Owner cuối cùng (409).'
+      x-required-scope: projects:manage
+      x-policy-action: member:manage
+      responses:
+        '204': { description: Đã gỡ }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'JWT HS256, payload chỉ gồm `sub` và `scope` (mặc định `tasks:read tasks:write projects:manage`), hạn 15 phút.'
+  parameters:
+    TaskId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, examples: [A1] }
+    ProjectId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, examples: [alpha] }
+  schemas:
+    Task:
+      type: object
+      required: [id, projectId, title, description, assignee, status]
+      properties:
+        id: { type: string, examples: [A1] }
+        projectId: { type: string, examples: [alpha] }
+        title: { type: string }
+        description: { type: string }
+        assignee: { type: [string, 'null'], examples: [bob] }
+        status: { type: string, enum: [Open, Closed] }
+    TaskPatch:
+      type: object
+      description: Chỉ các field này được áp dụng; `id`, `projectId`, `assignee` gửi lên bị bỏ qua.
+      properties:
+        title: { type: string }
+        description: { type: string }
+        status: { type: string, enum: [Open, Closed] }
+      examples:
+        - { title: Cập nhật từ Swagger }
+    Membership:
+      type: object
+      required: [projectId, userId, role]
+      properties:
+        projectId: { type: string }
+        userId: { type: string }
+        role: { type: string, enum: [Viewer, Member, Owner] }
+    MemberCreate:
+      type: object
+      required: [userId, role]
+      properties:
+        userId: { type: string, examples: [erin] }
+        role: { type: string, enum: [Viewer, Member, Owner] }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          examples: [not_found]
+  responses:
+    Unauthenticated:
+      description: Thiếu token, sai chữ ký, hết hạn hoặc `sub` không tồn tại
+      headers:
+        WWW-Authenticate: { schema: { type: string, const: Bearer } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: unauthenticated }
+    InsufficientScope:
+      description: Token không được cấp scope cho loại thao tác này
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: insufficient_scope, scope: tasks:read }
+    Forbidden:
+      description: Thiếu scope, hoặc người gọi thấy resource (cùng project) nhưng role/điều kiện không cho phép
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: forbidden }
+    NotFound:
+      description: Không tồn tại, hoặc người gọi không được biết nó tồn tại (khác project, khác tenant). Body giống hệt nhau.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: not_found }
+    BadRequest:
+      description: Dữ liệu không hợp lệ (invalid_status, invalid_role, invalid_user, invalid_json)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: invalid_status }
+    Conflict:
+      description: Xung đột trạng thái (already_member, last_owner)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: last_owner }

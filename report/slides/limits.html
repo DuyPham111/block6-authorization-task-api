@@ -1,0 +1,41 @@
+<section id="limits" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#A3480A">Trade-off · Chưa kiểm tra</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Giới hạn và hướng mở rộng</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:32px">
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<x-icon name="Lock" style="color:#A3480A;width:48px;height:48px"></x-icon>
+<p style="font-size:30px;font-weight:700;line-height:1.3">Concurrency</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Kiểm và ghi trong một transaction, hoặc UPDATE có điều kiện (Block 7)</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<x-icon name="Clock" style="color:#A3480A;width:48px;height:48px"></x-icon>
+<p style="font-size:30px;font-weight:700;line-height:1.3">Cache quyền</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">TTL ngắn, xóa cache khi gỡ thành viên hay đổi role</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<x-icon name="Database" style="color:#A3480A;width:48px;height:48px"></x-icon>
+<p style="font-size:30px;font-weight:700;line-height:1.3">DB thật</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">JOIN project_members có index; thêm Row-Level Security cho tenant</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<x-icon name="Link" style="color:#A3480A;width:48px;height:48px"></x-icon>
+<p style="font-size:30px;font-weight:700;line-height:1.3">Chia sẻ riêng task</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Thêm quan hệ task_shares, dạng ACL hoặc ReBAC</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<x-icon name="Users" style="color:#A3480A;width:48px;height:48px"></x-icon>
+<p style="font-size:30px;font-weight:700;line-height:1.3">Giao lại task</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Action task:assign chỉ cho Owner, có test riêng</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FBFAF7;border:2px solid #D9D2C3;border-radius:16px;padding:32px">
+<x-icon name="Warning" style="color:#A3480A;width:48px;height:48px"></x-icon>
+<p style="font-size:30px;font-weight:700;line-height:1.3">Rate limit</p>
+<p style="font-size:24px;line-height:1.4;color:#5B616B">Giới hạn tần suất theo user và IP; cảnh báo từ audit log khi thấy dò ID</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §10</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">27</p>
+<aside>Những gì nhóm chưa làm, nói thẳng kèm hướng xử lý. Concurrency: kiểm rồi ghi là hai bước, với DB thật cần transaction hoặc UPDATE có điều kiện, thuộc Block 7. Cache quyền: hiện chưa có; nếu thêm thì TTL ngắn và xóa khi đổi quyền. DB thật: hiện dữ liệu in-memory, readableProjectIds mô phỏng JOIN; production nên thêm Row-Level Security theo tenant làm lớp thứ hai. Chia sẻ riêng một task chưa có, sẽ thêm như một quan hệ. Chưa cho giao lại task qua PATCH, sẽ thêm action task:assign. Audit log đã có; còn thiếu rate limit để chặn dò ID tốc độ cao. Tất cả nằm trong REPORT.md mục 10.</aside>
+</section>

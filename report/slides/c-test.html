@@ -1,0 +1,25 @@
+<section id="c-test" style="background:#F6F4EF;color:#1B2430;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1F5FA8">Lựa chọn 7/11 · Kiểm thử và evidence</p>
+<h2 style="font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px">Jest + Supertest, đỏ trước xanh sau</h2>
+</div>
+<div style="display:flex;gap:40px;flex:1">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#DCE6F2;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#1F5FA8">Nhóm chọn vì</p>
+<p style="font-size:30px;line-height:1.35">Gọi HTTP thật vào app: qua đủ middleware → route → service → policy</p>
+<p style="font-size:30px;line-height:1.35">test-against.sh chạy test mới trên src của tag cũ để thấy đỏ</p>
+<p style="font-size:30px;line-height:1.35">Test từ chối kiểm cả dữ liệu không đổi và body không lộ nội dung</p>
+<p style="font-size:30px;line-height:1.35">Biến thể “từ chối hết” trượt 51/70: test được phép là bắt buộc</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#F6E0C8;border-radius:16px;padding:36px">
+<p style="font-size:24px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9A3F07">Không chọn</p>
+<p style="font-size:30px;line-height:1.35"><b>Postman / Newman</b>: khó chạy trên code của tag cũ, không gắn commit</p>
+<p style="font-size:30px;line-height:1.35"><b>Chỉ unit test decide()</b>: không chứng minh route thật đi qua policy</p>
+<p style="font-size:30px;line-height:1.35"><b>Chấp nhận “403 hoặc 404”</b>: không khóa quy ước che sự tồn tại</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#5B616B"><b>Đánh đổi chấp nhận:</b> tái tạo bảng oracle cần lịch sử git (repository GitHub); evidence đã đo được lưu sẵn trong docs/evidence.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#5B616B">Block 6 · Authorization &amp; Access Control · REPORT.md §4.12</p>
+<p style="position:absolute;right:128px;bottom:64px;width:120px;font-size:24px;color:#5B616B;text-align:right">21</p>
+<aside>Kiểm thử bằng Jest và Supertest. Supertest gọi HTTP thật vào app mà không mở cổng, nên request đi qua đủ middleware, route, service, policy. Mỗi phiên bản em viết test trước, rồi dùng test-against.sh lấy src của tag cũ chạy bộ test mới để thấy đỏ, lưu thành file before; sửa xong lưu file after. Test từ chối kiểm cả dữ liệu không đổi, vì một lỗi hay gặp là ghi rồi mới báo lỗi. Test kiểm mã cụ thể 403 hay 404 theo quy ước, chặt hơn tiêu chí "403 hoặc 404" của đề. Kiểm tra ngược: biến thể decide luôn deny trượt 51 trên 70 test; nếu chỉ chấm 403 hoặc 404 thì bản sai vẫn qua 11 trên 17 oracle. Không chọn Postman vì khó chạy trên code của tag cũ và output không gắn commit. Không chỉ unit test vì không chứng minh route thật đi qua policy; nhóm có cả hai loại.</aside>
+</section>

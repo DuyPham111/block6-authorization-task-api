@@ -1,0 +1,19 @@
+<section id="denyall" data-transition="fade" style="background:#1B2430;color:#F3EFE6;font-family:'Be Vietnam Pro', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<p style="font-size:24px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#F0A35E">Kiểm tra ngược · bản sửa “từ chối hết”</p>
+<div style="display:flex;align-items:end;gap:48px">
+<h1 style="font-size:96px;font-weight:700;line-height:1.05;letter-spacing:-2px;color:#F0A35E">11/17</h1>
+<p style="font-size:40px;line-height:1.3;color:#F3EFE6">test oracle vẫn qua nếu chỉ chấm “403 hoặc 404”</p>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border:2px solid #3A4656;border-radius:16px;padding:40px">
+<p style="font-size:40px;font-weight:700;color:#8DB8E8">51/70</p>
+<p style="font-size:30px;line-height:1.4;color:#B9C0CC">test của nhóm trượt khi decide() luôn trả deny</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border:2px solid #3A4656;border-radius:16px;padding:40px">
+<p style="font-size:40px;font-weight:700;color:#8DB8E8">6 test được phép</p>
+<p style="font-size:30px;line-height:1.4;color:#B9C0CC">O2, O4, O8, O9, O11, O15 là những test bắt được bản sai này</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.4;color:#B9C0CC">Vì vậy mỗi quyền đều có cả test được phép và test bị từ chối. Evidence: docs/evidence/deny-all.txt</p>
+<aside>Đề có nhắc: từ chối toàn bộ request không phải là bản sửa đúng. Em kiểm tra ngược điều này. Em tạo một biến thể sai trong thư mục tạm, cho decide luôn trả deny, rồi chạy cả bộ test. Nếu chỉ chấm theo tiêu chí "403 hoặc 404" của đề, bản sai này vẫn qua 11/17 test oracle, khớp với cột "Từ chối hết" trên slide 25. Chỉ có 6 test được phép bắt được nó. Với bộ test của em, 51/70 test trượt, vì em kiểm cả test được phép lẫn mã cụ thể. Kết luận: test được phép là bắt buộc.</aside>
+</section>
