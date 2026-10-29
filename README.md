@@ -86,3 +86,4 @@ node scripts/oracle-matrix.js    # bảng oracle theo từng tag
 - [docs/explanation.md](docs/explanation.md): lựa chọn mô hình, giới hạn, trường hợp chưa kiểm tra
 - [docs/evidence/](docs/evidence/): output test trước/sau từng phiên bản, curl IDOR, bảng oracle, code diff
 - [docs/thuyet-minh/](docs/thuyet-minh/): thuyết minh thiết kế và câu hỏi vấn đáp từng phần
+- [docs/ke-hoach.md](docs/ke-hoach.md): kế hoạch làm bài ban đầu và các điểm đã thay đổi
