@@ -1,15 +1,20 @@
 // Dữ liệu in-memory cho lab. resetDb() đưa dữ liệu về seed để mỗi test chạy độc lập.
 const SEED = {
+  tenants: [
+    { id: 'alpha', name: 'Tenant Alpha' },
+    { id: 'beta', name: 'Tenant Beta' },
+  ],
   users: [
-    { id: 'alice', name: 'Alice' },
-    { id: 'bob', name: 'Bob' },
-    { id: 'vera', name: 'Vera' },
-    { id: 'charlie', name: 'Charlie' },
-    { id: 'erin', name: 'Erin' },
+    { id: 'alice', name: 'Alice', tenantId: 'alpha' },
+    { id: 'bob', name: 'Bob', tenantId: 'alpha' },
+    { id: 'vera', name: 'Vera', tenantId: 'alpha' },
+    { id: 'erin', name: 'Erin', tenantId: 'alpha' },
+    { id: 'dana', name: 'Dana', tenantId: 'alpha', tenantRole: 'Admin' },
+    { id: 'charlie', name: 'Charlie', tenantId: 'beta' },
   ],
   projects: [
-    { id: 'alpha', name: 'Project Alpha' },
-    { id: 'beta', name: 'Project Beta' },
+    { id: 'alpha', name: 'Project Alpha', tenantId: 'alpha' },
+    { id: 'beta', name: 'Project Beta', tenantId: 'beta' },
   ],
   members: [
     { projectId: 'alpha', userId: 'alice', role: 'Owner' },

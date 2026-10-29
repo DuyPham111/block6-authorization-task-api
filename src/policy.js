@@ -18,6 +18,9 @@ const allow = reason => ({ allow: true, reason })
 const deny = (reason, { visible }) => ({ allow: false, visible, reason })
 
 function decide(user, action, { project, task }) {
+  // V4-PRE (cố ý chưa đúng): Admin được coi là admin toàn cục, chưa có tenant boundary.
+  if (user.tenantRole === 'Admin') return allow('admin')
+
   // ReBAC: người gọi phải là thành viên của project chứa resource.
   const membership = db.findMembership(user.id, project.id)
   if (!membership) return deny('not_member', { visible: false })
