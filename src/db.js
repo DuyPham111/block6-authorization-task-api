@@ -42,7 +42,10 @@ const findTask = id => state.tasks.find(t => t.id === id)
 const findMembership = (userId, projectId) =>
   state.members.find(m => m.userId === userId && m.projectId === projectId)
 const listMembers = projectId => state.members.filter(m => m.projectId === projectId)
+const listProjects = () => state.projects
 const listTasksByProject = projectId => state.tasks.filter(t => t.projectId === projectId)
+// Tương đương SELECT * FROM tasks WHERE project_id IN (:ids): một truy vấn cho cả danh sách.
+const listTasksInProjects = projectIds => state.tasks.filter(t => projectIds.includes(t.projectId))
 
 function updateTask(id, patch) {
   const task = findTask(id)
@@ -74,7 +77,9 @@ module.exports = {
   findTask,
   findMembership,
   listMembers,
+  listProjects,
   listTasksByProject,
+  listTasksInProjects,
   updateTask,
   deleteProject,
   addMember,

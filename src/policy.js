@@ -40,4 +40,13 @@ function decide(user, action, { project, task }) {
   return allow(`role:${membership.role}`)
 }
 
-module.exports = { decide, ROLES, ROLE_PERMISSIONS }
+// Bản "list" của rule task:read: các project người gọi được đọc, để lọc ngay trong truy vấn danh sách
+// (SQL tương đương: JOIN project_members ... WHERE tenant_id = :tenant).
+// Phải khớp với decide(); test/consistency.test.js đối chiếu hai đường này cho mọi user × task.
+function readableProjectIds(user) {
+  const inTenant = db.listProjects().filter(p => p.tenantId === user.tenantId)
+  if (user.tenantRole === 'Admin') return inTenant.map(p => p.id)
+  return inTenant.filter(p => db.findMembership(user.id, p.id)).map(p => p.id)
+}
+
+module.exports = { decide, readableProjectIds, ROLES, ROLE_PERMISSIONS }

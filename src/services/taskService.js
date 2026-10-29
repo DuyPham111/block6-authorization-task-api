@@ -1,5 +1,6 @@
 // PEP cho task: mọi entry point (route, job, export) đọc và sửa task qua service này.
 const db = require('../db')
+const { readableProjectIds } = require('../policy')
 const { loadTask, loadProject, enforce } = require('./access')
 const { badRequest } = require('../errors')
 
@@ -23,6 +24,11 @@ function listProjectTasks(user, projectId) {
   return db.listTasksByProject(projectId)
 }
 
+// Danh sách mọi task người gọi được đọc: điều kiện quyền nằm trong truy vấn, không lọc sau khi tải.
+function listVisibleTasks(user) {
+  return db.listTasksInProjects(readableProjectIds(user))
+}
+
 function updateTask(user, taskId, body = {}) {
   const resource = loadTask(taskId)
   // Kiểm quyền trên bản ghi đang lưu, trước khi áp dụng bất kỳ thay đổi nào từ body.
@@ -33,4 +39,4 @@ function updateTask(user, taskId, body = {}) {
   return db.updateTask(taskId, patch)
 }
 
-module.exports = { getTask, listProjectTasks, updateTask }
+module.exports = { getTask, listProjectTasks, listVisibleTasks, updateTask }

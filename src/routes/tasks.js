@@ -3,6 +3,10 @@ const { requireScope } = require('../auth')
 const taskService = require('../services/taskService')
 
 // Route chỉ chuyển request vào service; kiểm quyền nằm trong service (business layer).
+router.get('/', requireScope('tasks:read'), (req, res) => {
+  res.json(taskService.listVisibleTasks(req.user))
+})
+
 router.get('/:id', requireScope('tasks:read'), (req, res) => {
   res.json(taskService.getTask(req.user, req.params.id))
 })
