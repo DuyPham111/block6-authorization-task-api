@@ -1,0 +1,743 @@
+diff --git a/data/README.md b/data/README.md
+new file mode 100644
+index 0000000..6d02d77
+--- /dev/null
++++ b/data/README.md
+@@ -0,0 +1,24 @@
++# Dữ liệu đi kèm
++
++- `seed.json`: dataset giả của lab, gồm 2 tenant, 6 user, 2 project, 4 membership, 4 task. Không chứa secret hay token.
++- Ứng dụng nạp file này khi khởi động (`src/db.js` → `require('../data/seed.json')`). Mỗi test gọi `resetDb()` để trở về đúng dataset này.
++- Dữ liệu chạy ở RAM: khởi động lại server, hoặc gọi `POST /dev/reset` trên server demo, là dữ liệu trở về trạng thái ban đầu.
++- Không cần import thủ công, không cần cài PostgreSQL hay MySQL.
++
++| User | Tenant | Quan hệ | Dùng trong test |
++| --- | --- | --- | --- |
++| alice | alpha | Owner project Alpha | O2, O8, O9, E5, E9 |
++| bob | alpha | Member Alpha, assignee của A1 | O6, O7, O10–O14, E3, E16 |
++| vera | alpha | Viewer Alpha | O5, E20 |
++| erin | alpha | Chưa thuộc project nào | thêm thành viên (O9), ReBAC `not_member` |
++| dana | alpha | `tenantRole: Admin` của tenant Alpha | O15–O17, E22–E24 |
++| charlie | beta | Owner project Beta | O4, E14, E25, E26 |
++
++| Task | Project | Assignee | Status |
++| --- | --- | --- | --- |
++| A1 | alpha | bob | Open |
++| A2 | alpha | (chưa giao) | Open |
++| B1 | beta | charlie | Open |
++| B2 | beta | (chưa giao) | Open |
++
++Muốn thử kịch bản khác, sửa `seed.json` rồi khởi động lại server. Bộ test giả định đúng dataset trên, nên chạy `npm test` với seed gốc.
+diff --git a/data/seed.json b/data/seed.json
+new file mode 100644
+index 0000000..8e32841
+--- /dev/null
++++ b/data/seed.json
+@@ -0,0 +1,30 @@
++{
++  "tenants": [
++    { "id": "alpha", "name": "Tenant Alpha" },
++    { "id": "beta", "name": "Tenant Beta" }
++  ],
++  "users": [
++    { "id": "alice", "name": "Alice", "tenantId": "alpha" },
++    { "id": "bob", "name": "Bob", "tenantId": "alpha" },
++    { "id": "vera", "name": "Vera", "tenantId": "alpha" },
++    { "id": "erin", "name": "Erin", "tenantId": "alpha" },
++    { "id": "dana", "name": "Dana", "tenantId": "alpha", "tenantRole": "Admin" },
++    { "id": "charlie", "name": "Charlie", "tenantId": "beta" }
++  ],
++  "projects": [
++    { "id": "alpha", "name": "Project Alpha", "tenantId": "alpha" },
++    { "id": "beta", "name": "Project Beta", "tenantId": "beta" }
++  ],
++  "members": [
++    { "projectId": "alpha", "userId": "alice", "role": "Owner" },
++    { "projectId": "alpha", "userId": "bob", "role": "Member" },
++    { "projectId": "alpha", "userId": "vera", "role": "Viewer" },
++    { "projectId": "beta", "userId": "charlie", "role": "Owner" }
++  ],
++  "tasks": [
++    { "id": "A1", "projectId": "alpha", "title": "Thiết kế màn hình đăng nhập", "description": "Wireframe và luồng lỗi", "assignee": "bob", "status": "Open" },
++    { "id": "A2", "projectId": "alpha", "title": "Viết tài liệu API", "description": "OpenAPI cho /tasks", "assignee": null, "status": "Open" },
++    { "id": "B1", "projectId": "beta", "title": "Kế hoạch ra mắt Beta", "description": "Dữ liệu nội bộ của project Beta", "assignee": "charlie", "status": "Open" },
++    { "id": "B2", "projectId": "beta", "title": "Báo cáo doanh thu quý 3", "description": "Số liệu tài chính", "assignee": null, "status": "Open" }
++  ]
++}
+diff --git a/src/app.js b/src/app.js
+index 705cf06..ff153d8 100644
+--- a/src/app.js
++++ b/src/app.js
+@@ -4,7 +4,12 @@ const tasksRouter = require('./routes/tasks')
+ const projectsRouter = require('./routes/projects')
+ 
+ const app = express()
+-app.use(express.json())
++app.disable('x-powered-by')
++app.use(express.json({ limit: '10kb' }))
++
++// Health check cho Docker/load balancer: không cần token, không trả dữ liệu nghiệp vụ.
++app.get('/health', (req, res) => res.json({ status: 'ok' }))
++
+ app.use(authenticate)
+ 
+ app.use('/tasks', tasksRouter)
+@@ -12,12 +17,17 @@ app.use('/projects', projectsRouter)
+ 
+ app.use((req, res) => res.status(404).json({ error: 'not_found' }))
+ 
+-app.use((err, req, res, next) => {
++/** @type {Record<string, string>} lỗi của body parser → mã lỗi ổn định cho client */
++const PARSER_ERRORS = { 'entity.parse.failed': 'invalid_json', 'entity.too.large': 'payload_too_large' }
++
++/** @type {import('express').ErrorRequestHandler} */
++const errorHandler = (err, req, res, next) => {
+   if (err.status && err.status < 500) {
+-    return res.status(err.status).json({ error: err.code || err.type || 'bad_request' })
++    return res.status(err.status).json({ error: err.code || PARSER_ERRORS[err.type] || 'bad_request' })
+   }
+   console.error(err)
+   res.status(500).json({ error: 'internal_error' })
+-})
++}
++app.use(errorHandler)
+ 
+ module.exports = app
+diff --git a/src/audit.js b/src/audit.js
+new file mode 100644
+index 0000000..18e59b5
+--- /dev/null
++++ b/src/audit.js
+@@ -0,0 +1,53 @@
++// Audit log cho quyết định phân quyền. Lý do deny chỉ ghi phía server, không bao giờ trả về client.
++// Mỗi dòng là một JSON (JSON Lines) ra stdout: gom bằng ELK/Loki/CloudWatch về sau mà không đổi code.
++/** @typedef {import('./types').AuditEntry} AuditEntry */
++/** @typedef {import('./types').User} User */
++/** @typedef {import('./types').Resource} Resource */
++/** @typedef {import('./types').Decision} Decision */
++
++const MODES = ['off', 'deny', 'all']
++const RECENT_LIMIT = 50
++
++/** @type {AuditEntry[]} vài quyết định gần nhất, cho trang demo hiển thị lý do */
++const recent = []
++let seq = 0
++
++// AUDIT_LOG=off|deny|all. Mặc định: deny (production), off khi chạy test để output test sạch.
++function mode() {
++  const value = process.env.AUDIT_LOG ?? (process.env.NODE_ENV === 'test' ? 'off' : 'deny')
++  return MODES.includes(value) ? value : 'deny'
++}
++
++/**
++ * @param {{ user: User, action: string, resource: Resource, decision: Decision }} input
++ * @returns {AuditEntry}
++ */
++function record({ user, action, resource, decision }) {
++  /** @type {AuditEntry} */
++  const entry = {
++    seq: ++seq,
++    ts: new Date().toISOString(),
++    event: 'authz.decision',
++    userId: user.id,
++    action,
++    projectId: resource.project.id,
++    taskId: resource.task?.id ?? null,
++    allow: decision.allow,
++    reason: decision.reason,
++  }
++  recent.push(entry)
++  if (recent.length > RECENT_LIMIT) recent.shift()
++
++  const current = mode()
++  if (current === 'all' || (current === 'deny' && !entry.allow)) process.stdout.write(`${JSON.stringify(entry)}\n`)
++  return entry
++}
++
++/** @param {number} [after] chỉ lấy các entry có seq lớn hơn giá trị này */
++const recentEntries = (after = 0) => recent.filter(e => e.seq > after)
++
++const clear = () => {
++  recent.length = 0
++}
++
++module.exports = { record, recentEntries, clear }
+diff --git a/src/auth.js b/src/auth.js
+index 3c2fe99..a9e88fe 100644
+--- a/src/auth.js
++++ b/src/auth.js
+@@ -2,31 +2,44 @@
+ const jwt = require('jsonwebtoken')
+ const db = require('./db')
+ 
++// Production bắt buộc có secret riêng; secret mặc định chỉ dùng cho dev, test và demo trên máy local.
++if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
++  throw new Error('JWT_SECRET is required when NODE_ENV=production')
++}
+ const SECRET = process.env.JWT_SECRET || 'block6-dev-secret'
+ const ALL_SCOPES = 'tasks:read tasks:write projects:manage'
+ 
+-// Token chỉ mang danh tính (sub) và scope OAuth2. Role và tenant không nằm trong token.
++/**
++ * Token chỉ mang danh tính (sub) và scope OAuth2. Role và tenant không nằm trong token.
++ * @param {string} sub
++ * @param {{ scope?: string, expiresIn?: string | number }} [options]
++ */
+ function signToken(sub, { scope = ALL_SCOPES, expiresIn = '15m' } = {}) {
+-  return jwt.sign({ sub, scope }, SECRET, { algorithm: 'HS256', expiresIn })
++  return jwt.sign({ sub, scope }, SECRET, /** @type {jwt.SignOptions} */ ({ algorithm: 'HS256', expiresIn }))
+ }
+ 
++/**
++ * @param {import('express').Response} res
++ * @param {string} error
++ */
+ function unauthenticated(res, error) {
+   res.set('WWW-Authenticate', 'Bearer')
+   return res.status(401).json({ error })
+ }
+ 
++/** @type {import('express').RequestHandler} */
+ function authenticate(req, res, next) {
+   const [scheme, token] = (req.get('Authorization') || '').split(' ')
+   if (scheme !== 'Bearer' || !token) return unauthenticated(res, 'unauthenticated')
+ 
+   let payload
+   try {
+-    payload = jwt.verify(token, SECRET, { algorithms: ['HS256'] })
++    payload = /** @type {jwt.JwtPayload} */ (jwt.verify(token, SECRET, { algorithms: ['HS256'] }))
+   } catch {
+     return unauthenticated(res, 'invalid_token')
+   }
+ 
+-  const user = db.findUser(payload.sub)
++  const user = db.findUser(String(payload.sub))
+   if (!user) return unauthenticated(res, 'invalid_token')
+ 
+   req.user = user
+@@ -34,10 +47,16 @@ function authenticate(req, res, next) {
+   next()
+ }
+ 
+-// Lớp OAuth2 scope: token có được cấp loại thao tác này không. Không xét resource cụ thể.
++/**
++ * Lớp OAuth2 scope: token có được cấp loại thao tác này không. Không xét resource cụ thể.
++ * @param {string} scope
++ * @returns {import('express').RequestHandler}
++ */
+ function requireScope(scope) {
+-  return (req, res, next) =>
+-    req.scopes.includes(scope) ? next() : res.status(403).json({ error: 'insufficient_scope', scope })
++  return (req, res, next) => {
++    if (req.scopes.includes(scope)) return next()
++    res.status(403).json({ error: 'insufficient_scope', scope })
++  }
+ }
+ 
+ module.exports = { signToken, authenticate, requireScope, ALL_SCOPES }
+diff --git a/src/db.js b/src/db.js
+index a105942..e28229a 100644
+--- a/src/db.js
++++ b/src/db.js
+@@ -1,61 +1,63 @@
+ // Dữ liệu in-memory cho lab. resetDb() đưa dữ liệu về seed để mỗi test chạy độc lập.
+-const SEED = {
+-  users: [
+-    { id: 'alice', name: 'Alice' },
+-    { id: 'bob', name: 'Bob' },
+-    { id: 'vera', name: 'Vera' },
+-    { id: 'charlie', name: 'Charlie' },
+-    { id: 'erin', name: 'Erin' },
+-  ],
+-  projects: [
+-    { id: 'alpha', name: 'Project Alpha' },
+-    { id: 'beta', name: 'Project Beta' },
+-  ],
+-  members: [
+-    { projectId: 'alpha', userId: 'alice', role: 'Owner' },
+-    { projectId: 'alpha', userId: 'bob', role: 'Member' },
+-    { projectId: 'alpha', userId: 'vera', role: 'Viewer' },
+-    { projectId: 'beta', userId: 'charlie', role: 'Owner' },
+-  ],
+-  tasks: [
+-    { id: 'A1', projectId: 'alpha', title: 'Thiết kế màn hình đăng nhập', description: 'Wireframe và luồng lỗi', assignee: 'bob', status: 'Open' },
+-    { id: 'A2', projectId: 'alpha', title: 'Viết tài liệu API', description: 'OpenAPI cho /tasks', assignee: null, status: 'Open' },
+-    { id: 'B1', projectId: 'beta', title: 'Kế hoạch ra mắt Beta', description: 'Dữ liệu nội bộ của project Beta', assignee: 'charlie', status: 'Open' },
+-    { id: 'B2', projectId: 'beta', title: 'Báo cáo doanh thu quý 3', description: 'Số liệu tài chính', assignee: null, status: 'Open' },
+-  ],
+-}
++/** @typedef {import('./types').Seed} Seed */
++/** @typedef {import('./types').Task} Task */
++/** @typedef {import('./types').Membership} Membership */
++
++/** @type {Seed} Dataset nằm ở data/seed.json để nộp kèm và chỉnh sửa không cần đụng code. */
++const SEED = require('../data/seed.json')
+ 
++/** @type {Seed} */
+ let state
+ 
+ function resetDb() {
+   state = structuredClone(SEED)
+ }
+ 
++// Bản sao toàn bộ dữ liệu, chỉ dùng cho trang demo (/dev/state).
++const snapshot = () => structuredClone(state)
++
++/** @param {string} id */
+ const findUser = id => state.users.find(u => u.id === id)
++/** @param {string} id */
+ const findProject = id => state.projects.find(p => p.id === id)
++/** @param {string} id */
+ const findTask = id => state.tasks.find(t => t.id === id)
++/** @param {string} userId @param {string} projectId */
+ const findMembership = (userId, projectId) =>
+   state.members.find(m => m.userId === userId && m.projectId === projectId)
++/** @param {string} projectId */
+ const listMembers = projectId => state.members.filter(m => m.projectId === projectId)
++const listProjects = () => state.projects
++/** @param {string} projectId */
+ const listTasksByProject = projectId => state.tasks.filter(t => t.projectId === projectId)
++// Tương đương SELECT * FROM tasks WHERE project_id IN (:ids): một truy vấn cho cả danh sách.
++/** @param {string[]} projectIds */
++const listTasksInProjects = projectIds => state.tasks.filter(t => projectIds.includes(t.projectId))
+ 
++/**
++ * @param {string} id
++ * @param {Partial<Task>} patch
++ */
+ function updateTask(id, patch) {
+-  const task = findTask(id)
++  const task = /** @type {Task} */ (findTask(id))
+   Object.assign(task, patch)
+   return task
+ }
+ 
++/** @param {string} id */
+ function deleteProject(id) {
+   state.projects = state.projects.filter(p => p.id !== id)
+   state.tasks = state.tasks.filter(t => t.projectId !== id)
+   state.members = state.members.filter(m => m.projectId !== id)
+ }
+ 
++/** @param {Membership} member */
+ function addMember(member) {
+   state.members.push(member)
+   return member
+ }
+ 
++/** @param {string} projectId @param {string} userId */
+ function removeMember(projectId, userId) {
+   state.members = state.members.filter(m => !(m.projectId === projectId && m.userId === userId))
+ }
+@@ -64,12 +66,15 @@ resetDb()
+ 
+ module.exports = {
+   resetDb,
++  snapshot,
+   findUser,
+   findProject,
+   findTask,
+   findMembership,
+   listMembers,
++  listProjects,
+   listTasksByProject,
++  listTasksInProjects,
+   updateTask,
+   deleteProject,
+   addMember,
+diff --git a/src/errors.js b/src/errors.js
+index 5653f94..f4707eb 100644
+--- a/src/errors.js
++++ b/src/errors.js
+@@ -1,4 +1,5 @@
+ class HttpError extends Error {
++  /** @param {number} status @param {string} code */
+   constructor(status, code) {
+     super(code)
+     this.status = status
+@@ -9,7 +10,9 @@ class HttpError extends Error {
+ // 404 dùng chung một body cho "không tồn tại" và "không được thấy" để không lộ sự tồn tại.
+ const notFound = () => new HttpError(404, 'not_found')
+ const forbidden = () => new HttpError(403, 'forbidden')
++/** @param {string} code */
+ const badRequest = code => new HttpError(400, code)
++/** @param {string} code */
+ const conflict = code => new HttpError(409, code)
+ 
+ module.exports = { HttpError, notFound, forbidden, badRequest, conflict }
+diff --git a/src/load-env.js b/src/load-env.js
+new file mode 100644
+index 0000000..d55f1f1
+--- /dev/null
++++ b/src/load-env.js
+@@ -0,0 +1,7 @@
++// Nạp .env cạnh package.json nếu có (process.loadEnvFile có sẵn từ Node 20.12), không cần thư viện dotenv.
++// Chỉ các entry point (server, demo, token) gọi file này; test không nạp .env để kết quả luôn giống nhau.
++const fs = require('node:fs')
++const path = require('node:path')
++
++const file = path.join(__dirname, '..', '.env')
++if (fs.existsSync(file)) process.loadEnvFile(file)
+diff --git a/src/policy.js b/src/policy.js
+new file mode 100644
+index 0000000..fb875ce
+--- /dev/null
++++ b/src/policy.js
+@@ -0,0 +1,66 @@
++// PDP (Policy Decision Point): trả lời allow(subject, action, resource).
++// Hàm thuần, không biết gì về HTTP. `resource` = { project, task? } luôn được nạp từ DB.
++/** @typedef {import('./types').User} User */
++/** @typedef {import('./types').Resource} Resource */
++/** @typedef {import('./types').Decision} Decision */
++const db = require('./db')
++
++/** RBAC: permission gắn với role trong phạm vi một project. @type {Record<string, string[]>} */
++const ROLE_PERMISSIONS = {
++  Viewer: ['task:read'],
++  Member: ['task:read', 'task:edit'],
++  Owner: ['task:read', 'task:edit', 'project:delete', 'member:manage'],
++}
++const ROLES = Object.keys(ROLE_PERMISSIONS)
++
++// Role lạ (kể cả '__proto__', 'constructor') không có quyền nào: deny by default.
++/** @param {string} role */
++const permissionsOf = role => (Object.hasOwn(ROLE_PERMISSIONS, role) ? ROLE_PERMISSIONS[role] : [])
++
++/** @param {string} reason @returns {Decision} */
++const allow = reason => ({ allow: true, reason })
++// visible = false: người gọi không được biết resource tồn tại (PEP trả 404 thay vì 403).
++/** @param {string} reason @param {{ visible: boolean }} options @returns {Decision} */
++const deny = (reason, { visible }) => ({ allow: false, visible, reason })
++
++/**
++ * @param {User} user
++ * @param {string} action
++ * @param {Resource} resource
++ * @returns {Decision}
++ */
++function decide(user, action, { project, task }) {
++  // Tenant boundary: đứng trước mọi role, kể cả Admin. Tenant của người gọi lấy từ DB, không từ header.
++  if (user.tenantId !== project.tenantId) return deny('other_tenant', { visible: false })
++
++  // Admin của tenant: toàn quyền, nhưng chỉ trong tenant của mình.
++  if (user.tenantRole === 'Admin') return allow('tenant_admin')
++
++  // ReBAC: người gọi phải là thành viên của project chứa resource.
++  const membership = db.findMembership(user.id, project.id)
++  if (!membership) return deny('not_member', { visible: false })
++
++  // RBAC: role lấy từ bảng thành viên, không lấy từ request.
++  if (!permissionsOf(membership.role).includes(action)) return deny('role_lacks_permission', { visible: true })
++
++  // ABAC: Member chỉ sửa task được giao cho mình khi task còn Open (thuộc tính của bản ghi đang lưu).
++  if (action === 'task:edit' && membership.role === 'Member') {
++    if (!task) return deny('missing_task', { visible: true }) // fail closed: thiếu dữ liệu thì không cho
++    if (task.assignee !== user.id) return deny('not_assignee', { visible: true })
++    if (task.status !== 'Open') return deny('task_closed', { visible: true })
++  }
++
++  return allow(`role:${membership.role}`)
++}
++
++// Bản "list" của rule task:read: các project người gọi được đọc, để lọc ngay trong truy vấn danh sách
++// (SQL tương đương: JOIN project_members ... WHERE tenant_id = :tenant).
++// Phải khớp với decide(); test/consistency.test.js đối chiếu hai đường này cho mọi user × task.
++/** @param {User} user @returns {string[]} */
++function readableProjectIds(user) {
++  const inTenant = db.listProjects().filter(p => p.tenantId === user.tenantId)
++  if (user.tenantRole === 'Admin') return inTenant.map(p => p.id)
++  return inTenant.filter(p => db.findMembership(user.id, p.id)).map(p => p.id)
++}
++
++module.exports = { decide, readableProjectIds, ROLES, ROLE_PERMISSIONS }
+diff --git a/src/routes/projects.js b/src/routes/projects.js
+index c13a152..df56ac2 100644
+--- a/src/routes/projects.js
++++ b/src/routes/projects.js
+@@ -1,29 +1,24 @@
+ const router = require('express').Router()
+-const db = require('../db')
+ const { requireScope } = require('../auth')
+-const { notFound } = require('../errors')
++const taskService = require('../services/taskService')
++const projectService = require('../services/projectService')
+ 
+-// STARTER: mọi người đã đăng nhập đều gọi được các chức năng quản lý project (lỗi BFLA có chủ đích).
++// Route chỉ chuyển request vào service; kiểm quyền nằm trong service (business layer).
+ router.get('/:id/tasks', requireScope('tasks:read'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  res.json(db.listTasksByProject(req.params.id))
++  res.json(taskService.listProjectTasks(req.user, String(req.params.id)))
+ })
+ 
+ router.delete('/:id', requireScope('projects:manage'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  db.deleteProject(req.params.id)
++  projectService.deleteProject(req.user, String(req.params.id))
+   res.sendStatus(204)
+ })
+ 
+ router.post('/:id/members', requireScope('projects:manage'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  const member = db.addMember({ projectId: req.params.id, userId: req.body.userId, role: req.body.role })
+-  res.status(201).json(member)
++  res.status(201).json(projectService.addMember(req.user, String(req.params.id), req.body))
+ })
+ 
+ router.delete('/:id/members/:userId', requireScope('projects:manage'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  db.removeMember(req.params.id, req.params.userId)
++  projectService.removeMember(req.user, String(req.params.id), String(req.params.userId))
+   res.sendStatus(204)
+ })
+ 
+diff --git a/src/routes/tasks.js b/src/routes/tasks.js
+index ab88a47..775ba29 100644
+--- a/src/routes/tasks.js
++++ b/src/routes/tasks.js
+@@ -1,19 +1,18 @@
+ const router = require('express').Router()
+-const db = require('../db')
+ const { requireScope } = require('../auth')
+-const { notFound } = require('../errors')
++const taskService = require('../services/taskService')
++
++// Route chỉ chuyển request vào service; kiểm quyền nằm trong service (business layer).
++router.get('/', requireScope('tasks:read'), (req, res) => {
++  res.json(taskService.listVisibleTasks(req.user))
++})
+ 
+-// STARTER: chỉ kiểm token và scope, KHÔNG kiểm quyền trên task (lỗi IDOR/BOLA có chủ đích).
+ router.get('/:id', requireScope('tasks:read'), (req, res) => {
+-  const task = db.findTask(req.params.id)
+-  if (!task) throw notFound()
+-  res.json(task)
++  res.json(taskService.getTask(req.user, String(req.params.id)))
+ })
+ 
+ router.patch('/:id', requireScope('tasks:write'), (req, res) => {
+-  const task = db.findTask(req.params.id)
+-  if (!task) throw notFound()
+-  res.json(db.updateTask(task.id, req.body))
++  res.json(taskService.updateTask(req.user, String(req.params.id), req.body))
+ })
+ 
+ module.exports = router
+diff --git a/src/server.js b/src/server.js
+index 8d32535..685c351 100644
+--- a/src/server.js
++++ b/src/server.js
+@@ -1,4 +1,10 @@
++require('./load-env')
+ const app = require('./app')
+ 
+-const port = process.env.PORT || 3000
+-app.listen(port, () => console.log(`Task API listening on http://localhost:${port}`))
++const port = Number(process.env.PORT) || 3000
++const server = app.listen(port, () => console.log(`Task API listening on http://localhost:${port}`))
++
++// Docker gửi SIGTERM khi dừng container: đóng server gọn thay vì chờ bị kill sau 10 giây.
++for (const signal of ['SIGINT', 'SIGTERM']) {
++  process.on(signal, () => server.close(() => process.exit(0)))
++}
+diff --git a/src/services/access.js b/src/services/access.js
+new file mode 100644
+index 0000000..e96cfc3
+--- /dev/null
++++ b/src/services/access.js
+@@ -0,0 +1,38 @@
++// Phần dùng chung của PEP: nạp resource từ DB rồi áp dụng quyết định của PDP.
++/** @typedef {import('../types').User} User */
++/** @typedef {import('../types').Resource} Resource */
++const db = require('../db')
++const audit = require('../audit')
++const { decide } = require('../policy')
++const { notFound, forbidden } = require('../errors')
++
++// project luôn suy ra từ task đang lưu, không lấy projectId từ request.
++/** @param {string} taskId @returns {Required<Resource>} */
++function loadTask(taskId) {
++  const task = db.findTask(taskId)
++  if (!task) throw notFound()
++  const project = db.findProject(task.projectId)
++  if (!project) throw notFound()
++  return { task, project }
++}
++
++/** @param {string} projectId @returns {Resource} */
++function loadProject(projectId) {
++  const project = db.findProject(projectId)
++  if (!project) throw notFound()
++  return { project }
++}
++
++/**
++ * @param {User} user
++ * @param {string} action
++ * @param {Resource} resource
++ */
++function enforce(user, action, resource) {
++  const decision = decide(user, action, resource)
++  audit.record({ user, action, resource, decision })
++  if (!decision.allow) throw decision.visible ? forbidden() : notFound()
++  return decision
++}
++
++module.exports = { loadTask, loadProject, enforce }
+diff --git a/src/services/projectService.js b/src/services/projectService.js
+new file mode 100644
+index 0000000..18c01a5
+--- /dev/null
++++ b/src/services/projectService.js
+@@ -0,0 +1,45 @@
++// PEP cho các chức năng quản lý project (chặn BFLA: gọi chức năng vượt role).
++/** @typedef {import('../types').User} User */
++const db = require('../db')
++const { ROLES } = require('../policy')
++const { loadProject, enforce } = require('./access')
++const { badRequest, notFound, conflict } = require('../errors')
++
++/** @param {User} user @param {string} projectId */
++function deleteProject(user, projectId) {
++  const resource = loadProject(projectId)
++  enforce(user, 'project:delete', resource)
++  db.deleteProject(projectId)
++}
++
++/**
++ * `role` ở đây là role của người được thêm, không phải role của người gọi.
++ * @param {User} user
++ * @param {string} projectId
++ * @param {{ userId?: unknown, role?: unknown }} [body]
++ */
++function addMember(user, projectId, { userId, role } = {}) {
++  const resource = loadProject(projectId)
++  enforce(user, 'member:manage', resource)
++
++  if (typeof role !== 'string' || !ROLES.includes(role)) throw badRequest('invalid_role')
++  // Chỉ thêm được user cùng tenant với project: membership không được vượt tenant boundary.
++  const target = typeof userId === 'string' ? db.findUser(userId) : undefined
++  if (!target || target.tenantId !== resource.project.tenantId) throw badRequest('invalid_user')
++  if (db.findMembership(target.id, projectId)) throw conflict('already_member')
++  return db.addMember({ projectId, userId: target.id, role })
++}
++
++/** @param {User} user @param {string} projectId @param {string} userId */
++function removeMember(user, projectId, userId) {
++  const resource = loadProject(projectId)
++  enforce(user, 'member:manage', resource)
++
++  const membership = db.findMembership(userId, projectId)
++  if (!membership) throw notFound()
++  const owners = db.listMembers(projectId).filter(m => m.role === 'Owner')
++  if (membership.role === 'Owner' && owners.length === 1) throw conflict('last_owner')
++  db.removeMember(projectId, userId)
++}
++
++module.exports = { deleteProject, addMember, removeMember }
+diff --git a/src/services/taskService.js b/src/services/taskService.js
+new file mode 100644
+index 0000000..0d010d7
+--- /dev/null
++++ b/src/services/taskService.js
+@@ -0,0 +1,57 @@
++// PEP cho task: mọi entry point (route, job, export) đọc và sửa task qua service này.
++/** @typedef {import('../types').User} User */
++/** @typedef {import('../types').Task} Task */
++const db = require('../db')
++const { readableProjectIds } = require('../policy')
++const { loadTask, loadProject, enforce } = require('./access')
++const { badRequest } = require('../errors')
++
++// Chỉ các field này được sửa qua PATCH; id, projectId, assignee bị bỏ qua (chống mass assignment).
++const EDITABLE_FIELDS = ['title', 'description', 'status']
++const STATUSES = ['Open', 'Closed']
++
++/**
++ * @param {Record<string, unknown>} body
++ * @param {string[]} fields
++ * @returns {Partial<Task>}
++ */
++const pick = (body, fields) =>
++  Object.fromEntries(fields.filter(f => Object.hasOwn(body, f)).map(f => [f, body[f]]))
++
++/** @param {User} user @param {string} taskId */
++function getTask(user, taskId) {
++  const resource = loadTask(taskId)
++  enforce(user, 'task:read', resource)
++  return resource.task
++}
++
++// Một quyết định cho cả project thay vì kiểm từng task (tránh N+1 truy vấn quyền).
++/** @param {User} user @param {string} projectId */
++function listProjectTasks(user, projectId) {
++  const resource = loadProject(projectId)
++  enforce(user, 'task:read', resource)
++  return db.listTasksByProject(projectId)
++}
++
++// Danh sách mọi task người gọi được đọc: điều kiện quyền nằm trong truy vấn, không lọc sau khi tải.
++/** @param {User} user */
++function listVisibleTasks(user) {
++  return db.listTasksInProjects(readableProjectIds(user))
++}
++
++/**
++ * @param {User} user
++ * @param {string} taskId
++ * @param {Record<string, unknown>} [body]
++ */
++function updateTask(user, taskId, body = {}) {
++  const resource = loadTask(taskId)
++  // Kiểm quyền trên bản ghi đang lưu, trước khi áp dụng bất kỳ thay đổi nào từ body.
++  enforce(user, 'task:edit', resource)
++
++  const patch = pick(body, EDITABLE_FIELDS)
++  if ('status' in patch && !STATUSES.includes(String(patch.status))) throw badRequest('invalid_status')
++  return db.updateTask(taskId, patch)
++}
++
++module.exports = { getTask, listProjectTasks, listVisibleTasks, updateTask }
+diff --git a/src/types.d.ts b/src/types.d.ts
+new file mode 100644
+index 0000000..17f28e9
+--- /dev/null
++++ b/src/types.d.ts
+@@ -0,0 +1,37 @@
++// Kiểu dữ liệu dùng chung cho JSDoc, kiểm bằng `npm run typecheck` (tsc --checkJs). Không ảnh hưởng runtime.
++
++export interface Tenant { id: string; name: string }
++export interface User { id: string; name: string; tenantId: string; tenantRole?: string }
++export interface Project { id: string; name: string; tenantId: string }
++// role là string chứ không phải union: dữ liệu lỗi (role lạ) phải được PDP từ chối, không phải bị kiểu che mất.
++export interface Membership { projectId: string; userId: string; role: string }
++export interface Task { id: string; projectId: string; title: string; description: string; assignee: string | null; status: string }
++export interface Seed { tenants: Tenant[]; users: User[]; projects: Project[]; members: Membership[]; tasks: Task[] }
++
++/** Resource đã nạp từ DB mà PDP cần để quyết định. */
++export interface Resource { project: Project; task?: Task }
++
++export type Decision =
++  | { allow: true; reason: string }
++  | { allow: false; visible: boolean; reason: string }
++
++export interface AuditEntry {
++  seq: number
++  ts: string
++  event: 'authz.decision'
++  userId: string
++  action: string
++  projectId: string
++  taskId: string | null
++  allow: boolean
++  reason: string
++}
++
++declare global {
++  namespace Express {
++    interface Request {
++      user: User
++      scopes: string[]
++    }
++  }
++}

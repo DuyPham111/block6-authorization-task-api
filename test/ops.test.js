@@ -43,9 +43,11 @@ describe('Vận hành và cấu hình an toàn', () => {
   })
 
   test('[P5] NODE_ENV=production mà thiếu JWT_SECRET thì không khởi động', () => {
+    // NODE_PATH để tiến trình con tìm được dependency cả khi test chạy trên bản checkout tạm của một tag.
+    const nodeModules = path.resolve(require.resolve('jsonwebtoken'), '..', '..')
     const result = spawnSync(process.execPath, ['-e', "require('./src/auth')"], {
       cwd: path.join(__dirname, '..'),
-      env: { ...process.env, NODE_ENV: 'production', JWT_SECRET: '' },
+      env: { ...process.env, NODE_ENV: 'production', JWT_SECRET: '', NODE_PATH: nodeModules },
       encoding: 'utf8',
     })
     expect(result.status).not.toBe(0)

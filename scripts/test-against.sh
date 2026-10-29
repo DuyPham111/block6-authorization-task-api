@@ -9,8 +9,8 @@ shift
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
-# Tag cũ chỉ có src/; từ bản nộp có thêm data/seed.json.
-git archive "$TAG" $(git ls-tree --name-only "$TAG" | grep -E '^(src|data)$') | tar -x -C "$WORK"
+# Tag cũ chỉ có src/; các tag sau có thêm data/seed.json và docs/openapi.yaml.
+git archive "$TAG" $(git ls-tree --name-only "$TAG" | grep -E '^(src|data|docs)$') | tar -x -C "$WORK"
 cp -r test package.json "$WORK"/
 
 set -o pipefail
