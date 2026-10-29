@@ -28,5 +28,6 @@ Ghi chú:
 
 - O15 trượt từ `starter` đến `v3` vì user Dana và tenant chỉ được thêm ở `v4-pre` (token của Dana bị 401).
 - `v4-pre` là trạng thái cố ý chưa đúng: Admin được coi là toàn cục, nên Dana đọc được B1 (O16, O17 trượt).
-- Dòng "Toàn bộ test qua" ở `v4` chưa đủ 58 vì `GET /tasks` và test nhất quán chỉ có từ `final`.
+- Dòng "Toàn bộ test qua" ở `v4` chưa đủ vì `GET /tasks` và test nhất quán chỉ có từ `final`.
+- Ở `starter`, file unit test PDP không nạp được (chưa có `policy.js`) nên tổng số test đếm được ít hơn.
 - O8, O9, O11 qua ngay ở `starter`: đó là các request hợp lệ. Bản sửa phải giữ chúng xanh (không "từ chối hết").
