@@ -62,6 +62,7 @@ const lines = [
   '- `v4-pre` là trạng thái cố ý chưa đúng: Admin được coi là toàn cục, nên Dana đọc được B1 (O16, O17 trượt).',
   '- Dòng "Toàn bộ test qua" ở `v4` chưa đủ vì `GET /tasks` và test nhất quán chỉ có từ `final`.',
   '- Ở `starter`, file unit test PDP không nạp được (chưa có `policy.js`) nên tổng số test đếm được ít hơn.',
+  '- Các tag trước `submit` chưa có audit log, OpenAPI, `/health`, server demo, nên các test `[P*]`, `[L*]`, `[D*]`, `[S*]` trượt hoặc không nạp được ở đó. Thước đo so sánh giữa các phiên bản là 17 dòng oracle.',
   '- O8, O9, O11 qua ngay ở `starter`: đó là các request hợp lệ. Bản sửa phải giữ chúng xanh (không "từ chối hết").',
 ]
 console.log(lines.join('\n'))

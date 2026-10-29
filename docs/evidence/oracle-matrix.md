@@ -22,7 +22,7 @@ Sinh bởi `node scripts/oracle-matrix.js`: chạy bộ test hiện tại trên 
 | O16 | Dana đọc B1 (tenant Beta) -> 404 | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
 | O17 | Dana đọc B1 với header X-Tenant-Id: beta -> 404 | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
 | | **Oracle qua** | **6/17** | **7/17** | **12/17** | **14/17** | **15/17** | **17/17** | **17/17** | **17/17** |
-| | Toàn bộ test qua | 16/58 | 23/71 | 46/71 | 52/71 | 54/71 | 62/71 | 70/71 | 83/84 |
+| | Toàn bộ test qua | 16/58 | 23/71 | 46/71 | 52/71 | 54/71 | 62/71 | 70/71 | 84/84 |
 
 Ghi chú:
 
@@ -30,4 +30,5 @@ Ghi chú:
 - `v4-pre` là trạng thái cố ý chưa đúng: Admin được coi là toàn cục, nên Dana đọc được B1 (O16, O17 trượt).
 - Dòng "Toàn bộ test qua" ở `v4` chưa đủ vì `GET /tasks` và test nhất quán chỉ có từ `final`.
 - Ở `starter`, file unit test PDP không nạp được (chưa có `policy.js`) nên tổng số test đếm được ít hơn.
+- Các tag trước `submit` chưa có audit log, OpenAPI, `/health`, server demo, nên các test `[P*]`, `[L*]`, `[D*]`, `[S*]` trượt hoặc không nạp được ở đó. Thước đo so sánh giữa các phiên bản là 17 dòng oracle.
 - O8, O9, O11 qua ngay ở `starter`: đó là các request hợp lệ. Bản sửa phải giữ chúng xanh (không "từ chối hết").
