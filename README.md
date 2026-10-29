@@ -6,7 +6,8 @@ API quản lý task có sẵn xác thực JWT. Bài làm bổ sung **kiểm quy�
 
 ```bash
 npm install
-npm test                         # 58 test, gồm 17 test oracle của bài
+npm test                         # 70 test, gồm 17 test oracle của bài
+npx jest --coverage              # policy.js phủ 100% nhánh
 npm start                        # http://localhost:3000
 node scripts/token.js alice      # in token để gọi bằng curl
 ```

@@ -31,7 +31,7 @@
 
 ## 4. Cách kiểm chứng
 
-- 58 automated tests (`npm test`), gồm 17 test oracle `[O1]`–`[O17]`, 12 ô permission matrix, các test bổ sung `[E*]` và test nhất quán `[C*]`.
+- 70 automated tests (`npm test`), gồm 17 test oracle `[O1]`–`[O17]`, 12 ô permission matrix, các test bổ sung `[E*]`, test nhất quán `[C*]` và unit test PDP `[U*]`. Coverage: 98.9% dòng toàn bộ `src/`, `policy.js` 100% nhánh.
 - Mỗi phiên bản có evidence **đỏ trước khi sửa** (chạy test mới trên code của tag trước) và **xanh sau khi sửa**: `docs/evidence/v*-before.txt`, `v*-after.txt`.
 - `docs/evidence/oracle-matrix.md`: số test oracle qua ở từng tag (6 → 7 → 12 → 14 → 15 → 17).
 - Các test được phép (O2, O4, O8, O9, O11, O15, M1, M4–M7) chứng minh bản sửa không phải "từ chối hết".
