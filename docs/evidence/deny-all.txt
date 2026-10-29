@@ -1,0 +1,1041 @@
+FAIL [deny-all] test/v2.rbac.test.js
+  V2 - permission matrix theo role trong project
+    × [M1] Viewer đọc task -> allow=true (50 ms)
+    × [O5] Viewer sửa task -> allow=false (36 ms)
+    × [M2] Viewer xóa project -> allow=false (7 ms)
+    × [M3] Viewer quản lý thành viên -> allow=false (8 ms)
+    × [M4] Member đọc task -> allow=true (7 ms)
+    × [M5] Member sửa task -> allow=true (7 ms)
+    × [O6] Member xóa project -> allow=false (7 ms)
+    × [O7] Member quản lý thành viên -> allow=false (7 ms)
+    × [M6] Owner đọc task -> allow=true (8 ms)
+    × [M7] Owner sửa task -> allow=true (7 ms)
+    × [O8] Owner xóa project -> allow=true (6 ms)
+    × [O9] Owner quản lý thành viên -> allow=true (6 ms)
+  V2 - role không lấy từ request
+    × [O10] Bob tự gửi role=Admin (body, header, query) để xóa project -> 403 (8 ms)
+    × [E12] Member tự thêm mình làm Owner -> 403, role vẫn là Member (6 ms)
+    × [E10] Owner mời thành viên với role không có trong hệ thống (Admin) -> 400 (7 ms)
+  V2 - quản lý thành viên và thu hồi quyền
+    × [E5] Owner gỡ Bob khỏi Alpha -> Bob mất quyền đọc A1 ngay lập tức (6 ms)
+    × [E13] Member gỡ thành viên khác -> 403, Vera vẫn còn trong project (6 ms)
+    × [E11] Không gỡ được Owner cuối cùng của project -> 409 (7 ms)
+    √ [E14] Owner Beta không quản lý được thành viên project Alpha -> 404 (6 ms)
+  V2 - PATCH chỉ nhận field được phép
+    × [E9] Owner gửi projectId/id trong body -> bị bỏ qua, task vẫn thuộc Alpha (6 ms)
+    × [E15] Status ngoài Open/Closed -> 400 (6 ms)
+
+  ● V2 - permission matrix theo role trong project › [M1] Viewer đọc task -> allow=true
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      52 |     const res = await call(bearer(USER_OF_ROLE[role]))
+      53 |     if (allow) {
+    > 54 |       expect(res.status).toBe(allowed)
+         |                          ^
+      55 |     } else {
+      56 |       expectDenied(res, 403)
+      57 |       unchanged()
+
+      at toBe (test/v2.rbac.test.js:54:26)
+
+  ● V2 - permission matrix theo role trong project › [O5] Viewer sửa task -> allow=false
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at expectDenied (test/v2.rbac.test.js:56:7)
+
+  ● V2 - permission matrix theo role trong project › [M2] Viewer xóa project -> allow=false
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at expectDenied (test/v2.rbac.test.js:56:7)
+
+  ● V2 - permission matrix theo role trong project › [M3] Viewer quản lý thành viên -> allow=false
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at expectDenied (test/v2.rbac.test.js:56:7)
+
+  ● V2 - permission matrix theo role trong project › [M4] Member đọc task -> allow=true
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      52 |     const res = await call(bearer(USER_OF_ROLE[role]))
+      53 |     if (allow) {
+    > 54 |       expect(res.status).toBe(allowed)
+         |                          ^
+      55 |     } else {
+      56 |       expectDenied(res, 403)
+      57 |       unchanged()
+
+      at toBe (test/v2.rbac.test.js:54:26)
+
+  ● V2 - permission matrix theo role trong project › [M5] Member sửa task -> allow=true
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      52 |     const res = await call(bearer(USER_OF_ROLE[role]))
+      53 |     if (allow) {
+    > 54 |       expect(res.status).toBe(allowed)
+         |                          ^
+      55 |     } else {
+      56 |       expectDenied(res, 403)
+      57 |       unchanged()
+
+      at toBe (test/v2.rbac.test.js:54:26)
+
+  ● V2 - permission matrix theo role trong project › [O6] Member xóa project -> allow=false
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at expectDenied (test/v2.rbac.test.js:56:7)
+
+  ● V2 - permission matrix theo role trong project › [O7] Member quản lý thành viên -> allow=false
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at expectDenied (test/v2.rbac.test.js:56:7)
+
+  ● V2 - permission matrix theo role trong project › [M6] Owner đọc task -> allow=true
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      52 |     const res = await call(bearer(USER_OF_ROLE[role]))
+      53 |     if (allow) {
+    > 54 |       expect(res.status).toBe(allowed)
+         |                          ^
+      55 |     } else {
+      56 |       expectDenied(res, 403)
+      57 |       unchanged()
+
+      at toBe (test/v2.rbac.test.js:54:26)
+
+  ● V2 - permission matrix theo role trong project › [M7] Owner sửa task -> allow=true
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      52 |     const res = await call(bearer(USER_OF_ROLE[role]))
+      53 |     if (allow) {
+    > 54 |       expect(res.status).toBe(allowed)
+         |                          ^
+      55 |     } else {
+      56 |       expectDenied(res, 403)
+      57 |       unchanged()
+
+      at toBe (test/v2.rbac.test.js:54:26)
+
+  ● V2 - permission matrix theo role trong project › [O8] Owner xóa project -> allow=true
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 204
+    Received: 404
+
+      52 |     const res = await call(bearer(USER_OF_ROLE[role]))
+      53 |     if (allow) {
+    > 54 |       expect(res.status).toBe(allowed)
+         |                          ^
+      55 |     } else {
+      56 |       expectDenied(res, 403)
+      57 |       unchanged()
+
+      at toBe (test/v2.rbac.test.js:54:26)
+
+  ● V2 - permission matrix theo role trong project › [O9] Owner quản lý thành viên -> allow=true
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 404
+
+      52 |     const res = await call(bearer(USER_OF_ROLE[role]))
+      53 |     if (allow) {
+    > 54 |       expect(res.status).toBe(allowed)
+         |                          ^
+      55 |     } else {
+      56 |       expectDenied(res, 403)
+      57 |       unchanged()
+
+      at toBe (test/v2.rbac.test.js:54:26)
+
+  ● V2 - role không lấy từ request › [O10] Bob tự gửi role=Admin (body, header, query) để xóa project -> 403
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v2.rbac.test.js:69:5)
+
+  ● V2 - role không lấy từ request › [E12] Member tự thêm mình làm Owner -> 403, role vẫn là Member
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v2.rbac.test.js:78:5)
+
+  ● V2 - role không lấy từ request › [E10] Owner mời thành viên với role không có trong hệ thống (Admin) -> 400
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 404
+
+      85 |       .set('Authorization', bearer('alice'))
+      86 |       .send({ userId: 'erin', role: 'Admin' })
+    > 87 |     expect(res.status).toBe(400)
+         |                        ^
+      88 |     expect(db.findMembership('erin', 'alpha')).toBeUndefined()
+      89 |   })
+      90 | })
+
+      at Object.toBe (test/v2.rbac.test.js:87:24)
+
+  ● V2 - quản lý thành viên và thu hồi quyền › [E5] Owner gỡ Bob khỏi Alpha -> Bob mất quyền đọc A1 ngay lập tức
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      93 |   test('[E5] Owner gỡ Bob khỏi Alpha -> Bob mất quyền đọc A1 ngay lập tức', async () => {
+      94 |     const before = await api().get('/tasks/A1').set('Authorization', bearer('bob'))
+    > 95 |     expect(before.status).toBe(200)
+         |                           ^
+      96 |
+      97 |     const removed = await api().delete('/projects/alpha/members/bob').set('Authorization', bearer('alice'))
+      98 |     expect(removed.status).toBe(204)
+
+      at Object.toBe (test/v2.rbac.test.js:95:27)
+
+  ● V2 - quản lý thành viên và thu hồi quyền › [E13] Member gỡ thành viên khác -> 403, Vera vẫn còn trong project
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v2.rbac.test.js:106:5)
+
+  ● V2 - quản lý thành viên và thu hồi quyền › [E11] Không gỡ được Owner cuối cùng của project -> 409
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 409
+    Received: 404
+
+      110 |   test('[E11] Không gỡ được Owner cuối cùng của project -> 409', async () => {
+      111 |     const res = await api().delete('/projects/alpha/members/alice').set('Authorization', bearer('alice'))
+    > 112 |     expect(res.status).toBe(409)
+          |                        ^
+      113 |     expect(db.findMembership('alice', 'alpha').role).toBe('Owner')
+      114 |   })
+      115 |
+
+      at Object.toBe (test/v2.rbac.test.js:112:24)
+
+  ● V2 - PATCH chỉ nhận field được phép › [E9] Owner gửi projectId/id trong body -> bị bỏ qua, task vẫn thuộc Alpha
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      130 |       .set('Authorization', bearer('alice'))
+      131 |       .send({ title: 'Đổi tên', projectId: 'beta', id: 'HACK' })
+    > 132 |     expect(res.status).toBe(200)
+          |                        ^
+      133 |     const task = db.findTask('A1')
+      134 |     expect(task.title).toBe('Đổi tên')
+      135 |     expect(task.projectId).toBe('alpha')
+
+      at Object.toBe (test/v2.rbac.test.js:132:24)
+
+  ● V2 - PATCH chỉ nhận field được phép › [E15] Status ngoài Open/Closed -> 400
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 404
+
+      139 |   test('[E15] Status ngoài Open/Closed -> 400', async () => {
+      140 |     const res = await api().patch('/tasks/A1').set('Authorization', bearer('alice')).send({ status: 'Deleted' })
+    > 141 |     expect(res.status).toBe(400)
+          |                        ^
+      142 |     expect(db.findTask('A1').status).toBe('Open')
+      143 |   })
+      144 | })
+
+      at Object.toBe (test/v2.rbac.test.js:141:24)
+
+FAIL [deny-all] test/v3.rebac-abac.test.js
+  V3 - Member chỉ sửa task được giao cho mình khi task còn Open
+    × [O11] Bob sửa A1 (giao cho Bob, Open) -> 200 (38 ms)
+    × [O12] Bob sửa A2 (chưa được giao) -> 403, A2 không đổi (6 ms)
+    × [O13] Bob sửa A1 khi A1 đã Closed -> 403 (5 ms)
+    √ [O14] Bob sửa B1 (project khác) -> 404 (6 ms)
+  V3 - điều kiện lấy từ dữ liệu đang lưu, không lấy từ body
+    × [E3] Bob gửi assignee=bob để sửa A2 -> 403, A2 vẫn chưa giao (7 ms)
+    × [E16] Bob đóng A1 được, nhưng gửi status=Open để mở lại thì bị từ chối (5 ms)
+  V3 - kết hợp RBAC, ReBAC và ABAC
+    × [E17] Owner sửa A2 dù không được giao -> 200 (điều kiện assignee chỉ áp cho Member) (5 ms)
+    × [E18] Owner mở lại task đã đóng -> 200 (8 ms)
+    × [E20] Viewer được giao task vẫn không sửa được -> 403 (assignee không thay role) (10 ms)
+    √ [E21] Bob vẫn là assignee của A1 nhưng đã bị gỡ khỏi project -> 404 (cần quan hệ member) (5 ms)
+
+  ● V3 - Member chỉ sửa task được giao cho mình khi task còn Open › [O11] Bob sửa A1 (giao cho Bob, Open) -> 200
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      10 |   test('[O11] Bob sửa A1 (giao cho Bob, Open) -> 200', async () => {
+      11 |     const res = await patchAs('bob', 'A1', { title: 'Bob cập nhật' })
+    > 12 |     expect(res.status).toBe(200)
+         |                        ^
+      13 |     expect(db.findTask('A1').title).toBe('Bob cập nhật')
+      14 |   })
+      15 |
+
+      at Object.toBe (test/v3.rebac-abac.test.js:12:24)
+
+  ● V3 - Member chỉ sửa task được giao cho mình khi task còn Open › [O12] Bob sửa A2 (chưa được giao) -> 403, A2 không đổi
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v3.rebac-abac.test.js:18:5)
+
+  ● V3 - Member chỉ sửa task được giao cho mình khi task còn Open › [O13] Bob sửa A1 khi A1 đã Closed -> 403
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v3.rebac-abac.test.js:25:5)
+
+  ● V3 - điều kiện lấy từ dữ liệu đang lưu, không lấy từ body › [E3] Bob gửi assignee=bob để sửa A2 -> 403, A2 vẫn chưa giao
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v3.rebac-abac.test.js:39:5)
+
+  ● V3 - điều kiện lấy từ dữ liệu đang lưu, không lấy từ body › [E16] Bob đóng A1 được, nhưng gửi status=Open để mở lại thì bị từ chối
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      43 |   test('[E16] Bob đóng A1 được, nhưng gửi status=Open để mở lại thì bị từ chối', async () => {
+      44 |     const close = await patchAs('bob', 'A1', { status: 'Closed' })
+    > 45 |     expect(close.status).toBe(200)
+         |                          ^
+      46 |
+      47 |     const reopen = await patchAs('bob', 'A1', { status: 'Open' })
+      48 |     expectDenied(reopen, 403)
+
+      at Object.toBe (test/v3.rebac-abac.test.js:45:26)
+
+  ● V3 - kết hợp RBAC, ReBAC và ABAC › [E17] Owner sửa A2 dù không được giao -> 200 (điều kiện assignee chỉ áp cho Member)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      54 |   test('[E17] Owner sửa A2 dù không được giao -> 200 (điều kiện assignee chỉ áp cho Member)', async () => {
+      55 |     const res = await patchAs('alice', 'A2', { title: 'Owner cập nhật' })
+    > 56 |     expect(res.status).toBe(200)
+         |                        ^
+      57 |   })
+      58 |
+      59 |   test('[E18] Owner mở lại task đã đóng -> 200', async () => {
+
+      at Object.toBe (test/v3.rebac-abac.test.js:56:24)
+
+  ● V3 - kết hợp RBAC, ReBAC và ABAC › [E18] Owner mở lại task đã đóng -> 200
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      60 |     db.updateTask('A1', { status: 'Closed' })
+      61 |     const res = await patchAs('alice', 'A1', { status: 'Open' })
+    > 62 |     expect(res.status).toBe(200)
+         |                        ^
+      63 |     expect(db.findTask('A1').status).toBe('Open')
+      64 |   })
+      65 |
+
+      at Object.toBe (test/v3.rebac-abac.test.js:62:24)
+
+  ● V3 - kết hợp RBAC, ReBAC và ABAC › [E20] Viewer được giao task vẫn không sửa được -> 403 (assignee không thay role)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v3.rebac-abac.test.js:69:5)
+
+FAIL [deny-all] test/v1.idor.test.js
+  V1 - object-level authorization khi đọc task
+    √ [O1] Anonymous đọc A1 -> 401 (5 ms)
+    × [O2] Alice đọc A1 (cùng project) -> 200 (7 ms)
+    √ [O3] Alice đọc B1 (project Beta) -> 404, không lộ nội dung (7 ms)
+    × [O4] Charlie đọc B1 (Owner Beta) -> 200 (6 ms)
+    √ [E1] Token của Alice đã hết hạn -> 401 (6 ms)
+    √ [E2] Task không tồn tại -> 404, body giống hệt khi bị che (không dò được ID) (11 ms)
+    √ [E4] Alice đọc danh sách task của project Beta -> 404 (entry point thứ hai) (5 ms)
+    × [E4b] Alice đọc danh sách task của project Alpha -> 200, chỉ có task Alpha (5 ms)
+    √ [E6] Bob tự khai userId=charlie (query, header, body) vẫn không đọc được B1 (13 ms)
+    × [E7] Token chỉ có scope tasks:read: đọc được A1 nhưng vẫn không đọc được B1 (9 ms)
+    √ [E8] Token thiếu scope tasks:read -> 403 insufficient_scope dù Alice là Owner (6 ms)
+
+  ● V1 - object-level authorization khi đọc task › [O2] Alice đọc A1 (cùng project) -> 200
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      12 |   test('[O2] Alice đọc A1 (cùng project) -> 200', async () => {
+      13 |     const res = await api().get('/tasks/A1').set('Authorization', bearer('alice'))
+    > 14 |     expect(res.status).toBe(200)
+         |                        ^
+      15 |     expect(res.body.id).toBe('A1')
+      16 |   })
+      17 |
+
+      at Object.toBe (test/v1.idor.test.js:14:24)
+
+  ● V1 - object-level authorization khi đọc task › [O4] Charlie đọc B1 (Owner Beta) -> 200
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      23 |   test('[O4] Charlie đọc B1 (Owner Beta) -> 200', async () => {
+      24 |     const res = await api().get('/tasks/B1').set('Authorization', bearer('charlie'))
+    > 25 |     expect(res.status).toBe(200)
+         |                        ^
+      26 |     expect(res.body.id).toBe('B1')
+      27 |   })
+      28 |
+
+      at Object.toBe (test/v1.idor.test.js:25:24)
+
+  ● V1 - object-level authorization khi đọc task › [E4b] Alice đọc danh sách task của project Alpha -> 200, chỉ có task Alpha
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      47 |   test('[E4b] Alice đọc danh sách task của project Alpha -> 200, chỉ có task Alpha', async () => {
+      48 |     const res = await api().get('/projects/alpha/tasks').set('Authorization', bearer('alice'))
+    > 49 |     expect(res.status).toBe(200)
+         |                        ^
+      50 |     expect(res.body.map(t => t.id).sort()).toEqual(['A1', 'A2'])
+      51 |   })
+      52 |
+
+      at Object.toBe (test/v1.idor.test.js:49:24)
+
+  ● V1 - object-level authorization khi đọc task › [E7] Token chỉ có scope tasks:read: đọc được A1 nhưng vẫn không đọc được B1
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      64 |     const own = await api().get('/tasks/A1').set('Authorization', token)
+      65 |     const other = await api().get('/tasks/B1').set('Authorization', token)
+    > 66 |     expect(own.status).toBe(200)
+         |                        ^
+      67 |     expectDenied(other, 404)
+      68 |   })
+      69 |
+
+      at Object.toBe (test/v1.idor.test.js:66:24)
+
+FAIL [deny-all] test/v4.tenant.test.js
+  V4 - Admin tenant Alpha không vượt tenant boundary
+    × [O15] Dana (Admin tenant Alpha) đọc A1 -> 200 (7 ms)
+    √ [O16] Dana đọc B1 (tenant Beta) -> 404 (6 ms)
+    √ [O17] Dana đọc B1 với header X-Tenant-Id: beta -> 404 (6 ms)
+    √ [E22] Dana gửi tenantId=beta trong query và body -> 404 (13 ms)
+    √ [E23] Dana xem danh sách hoặc xóa project Beta -> 404, Beta vẫn còn (11 ms)
+  V4 - quyền Admin bên trong tenant của mình
+    × [E24] Dana quản lý thành viên project Alpha dù không phải member -> 201 (5 ms)
+  V4 - dữ liệu thành viên không vượt tenant
+    √ [E25] Membership chéo tenant (dữ liệu lỗi) vẫn bị chặn bởi tenant boundary -> 404 (6 ms)
+    × [E26] Owner Alpha thêm user của tenant Beta vào project -> 400 (5 ms)
+
+  ● V4 - Admin tenant Alpha không vượt tenant boundary › [O15] Dana (Admin tenant Alpha) đọc A1 -> 200
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+       9 |   test('[O15] Dana (Admin tenant Alpha) đọc A1 -> 200', async () => {
+      10 |     const res = await asDana(api().get('/tasks/A1'))
+    > 11 |     expect(res.status).toBe(200)
+         |                        ^
+      12 |     expect(res.body.id).toBe('A1')
+      13 |   })
+      14 |
+
+      at Object.toBe (test/v4.tenant.test.js:11:24)
+
+  ● V4 - quyền Admin bên trong tenant của mình › [E24] Dana quản lý thành viên project Alpha dù không phải member -> 201
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 404
+
+      40 |   test('[E24] Dana quản lý thành viên project Alpha dù không phải member -> 201', async () => {
+      41 |     const res = await asDana(api().post('/projects/alpha/members')).send({ userId: 'erin', role: 'Viewer' })
+    > 42 |     expect(res.status).toBe(201)
+         |                        ^
+      43 |     expect(db.findMembership('erin', 'alpha').role).toBe('Viewer')
+      44 |   })
+      45 | })
+
+      at Object.toBe (test/v4.tenant.test.js:42:24)
+
+  ● V4 - dữ liệu thành viên không vượt tenant › [E26] Owner Alpha thêm user của tenant Beta vào project -> 400
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 404
+
+      57 |       .set('Authorization', bearer('alice'))
+      58 |       .send({ userId: 'charlie', role: 'Viewer' })
+    > 59 |     expect(res.status).toBe(400)
+         |                        ^
+      60 |     expect(db.findMembership('charlie', 'alpha')).toBeUndefined()
+      61 |   })
+      62 | })
+
+      at Object.toBe (test/v4.tenant.test.js:59:24)
+
+FAIL [deny-all] test/policy.unit.test.js
+  PDP decide() - lý do của từng nhánh
+    × [U1] charlie task:read trên A1 -> allow=false (other_tenant) (5 ms)
+    × [U1] dana project:delete trên A1 -> allow=true (tenant_admin) (1 ms)
+    × [U1] erin task:read trên A1 -> allow=false (not_member) (1 ms)
+    × [U1] vera task:edit trên A1 -> allow=false (role_lacks_permission) (1 ms)
+    × [U1] bob task:edit trên A2 -> allow=false (not_assignee) (1 ms)
+    × [U1] alice member:manage trên A1 -> allow=true (role:Owner) (1 ms)
+    × [U2] Member sửa task đã đóng -> task_closed (5 ms)
+    × [U3] Role lạ "Admin" trong dữ liệu thành viên không có quyền nào (deny by default) (1 ms)
+    × [U3] Role lạ "__proto__" trong dữ liệu thành viên không có quyền nào (deny by default) (1 ms)
+    × [U3] Role lạ "constructor" trong dữ liệu thành viên không có quyền nào (deny by default)
+    × [U3] Role lạ "toString" trong dữ liệu thành viên không có quyền nào (deny by default) (5 ms)
+    √ [U4] Action chưa khai báo trong policy bị từ chối, kể cả với Owner (1 ms)
+
+  ● PDP decide() - lý do của từng nhánh › [U1] charlie task:read trên A1 -> allow=false (other_tenant)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "other_tenant"
+    Received: "deny_all"
+
+      21 |     const decision = decide(db.findUser(userId), action, resourceOfTask(taskId))
+      22 |     expect(decision.allow).toBe(allow)
+    > 23 |     expect(decision.reason).toBe(reason)
+         |                             ^
+      24 |   })
+      25 |
+      26 |   test('[U2] Member sửa task đã đóng -> task_closed', () => {
+
+      at toBe (test/policy.unit.test.js:23:29)
+
+  ● PDP decide() - lý do của từng nhánh › [U1] dana project:delete trên A1 -> allow=true (tenant_admin)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      20 |   ])('[U1] %s %s trên %s -> allow=%s (%s)', (userId, action, taskId, allow, reason) => {
+      21 |     const decision = decide(db.findUser(userId), action, resourceOfTask(taskId))
+    > 22 |     expect(decision.allow).toBe(allow)
+         |                            ^
+      23 |     expect(decision.reason).toBe(reason)
+      24 |   })
+      25 |
+
+      at toBe (test/policy.unit.test.js:22:28)
+
+  ● PDP decide() - lý do của từng nhánh › [U1] erin task:read trên A1 -> allow=false (not_member)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "not_member"
+    Received: "deny_all"
+
+      21 |     const decision = decide(db.findUser(userId), action, resourceOfTask(taskId))
+      22 |     expect(decision.allow).toBe(allow)
+    > 23 |     expect(decision.reason).toBe(reason)
+         |                             ^
+      24 |   })
+      25 |
+      26 |   test('[U2] Member sửa task đã đóng -> task_closed', () => {
+
+      at toBe (test/policy.unit.test.js:23:29)
+
+  ● PDP decide() - lý do của từng nhánh › [U1] vera task:edit trên A1 -> allow=false (role_lacks_permission)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "role_lacks_permission"
+    Received: "deny_all"
+
+      21 |     const decision = decide(db.findUser(userId), action, resourceOfTask(taskId))
+      22 |     expect(decision.allow).toBe(allow)
+    > 23 |     expect(decision.reason).toBe(reason)
+         |                             ^
+      24 |   })
+      25 |
+      26 |   test('[U2] Member sửa task đã đóng -> task_closed', () => {
+
+      at toBe (test/policy.unit.test.js:23:29)
+
+  ● PDP decide() - lý do của từng nhánh › [U1] bob task:edit trên A2 -> allow=false (not_assignee)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "not_assignee"
+    Received: "deny_all"
+
+      21 |     const decision = decide(db.findUser(userId), action, resourceOfTask(taskId))
+      22 |     expect(decision.allow).toBe(allow)
+    > 23 |     expect(decision.reason).toBe(reason)
+         |                             ^
+      24 |   })
+      25 |
+      26 |   test('[U2] Member sửa task đã đóng -> task_closed', () => {
+
+      at toBe (test/policy.unit.test.js:23:29)
+
+  ● PDP decide() - lý do của từng nhánh › [U1] alice member:manage trên A1 -> allow=true (role:Owner)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      20 |   ])('[U1] %s %s trên %s -> allow=%s (%s)', (userId, action, taskId, allow, reason) => {
+      21 |     const decision = decide(db.findUser(userId), action, resourceOfTask(taskId))
+    > 22 |     expect(decision.allow).toBe(allow)
+         |                            ^
+      23 |     expect(decision.reason).toBe(reason)
+      24 |   })
+      25 |
+
+      at toBe (test/policy.unit.test.js:22:28)
+
+  ● PDP decide() - lý do của từng nhánh › [U2] Member sửa task đã đóng -> task_closed
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 2
+    + Received  + 2
+
+      Object {
+        "allow": false,
+    -   "reason": "task_closed",
+    -   "visible": true,
+    +   "reason": "deny_all",
+    +   "visible": false,
+      }
+
+      27 |     db.updateTask('A1', { status: 'Closed' })
+      28 |     const decision = decide(db.findUser('bob'), 'task:edit', resourceOfTask('A1'))
+    > 29 |     expect(decision).toMatchObject({ allow: false, reason: 'task_closed', visible: true })
+         |                      ^
+      30 |   })
+      31 |
+      32 |   test.each(['Admin', '__proto__', 'constructor', 'toString'])(
+
+      at Object.toMatchObject (test/policy.unit.test.js:29:22)
+
+  ● PDP decide() - lý do của từng nhánh › [U3] Role lạ "Admin" trong dữ liệu thành viên không có quyền nào (deny by default)
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "allow": false,
+    -   "reason": "role_lacks_permission",
+    +   "reason": "deny_all",
+      }
+
+      35 |       db.addMember({ projectId: 'alpha', userId: 'erin', role })
+      36 |       const decision = decide(db.findUser('erin'), 'task:read', resourceOfTask('A1'))
+    > 37 |       expect(decision).toMatchObject({ allow: false, reason: 'role_lacks_permission' })
+         |                        ^
+      38 |     },
+      39 |   )
+      40 |
+
+      at toMatchObject (test/policy.unit.test.js:37:24)
+
+  ● PDP decide() - lý do của từng nhánh › [U3] Role lạ "__proto__" trong dữ liệu thành viên không có quyền nào (deny by default)
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "allow": false,
+    -   "reason": "role_lacks_permission",
+    +   "reason": "deny_all",
+      }
+
+      35 |       db.addMember({ projectId: 'alpha', userId: 'erin', role })
+      36 |       const decision = decide(db.findUser('erin'), 'task:read', resourceOfTask('A1'))
+    > 37 |       expect(decision).toMatchObject({ allow: false, reason: 'role_lacks_permission' })
+         |                        ^
+      38 |     },
+      39 |   )
+      40 |
+
+      at toMatchObject (test/policy.unit.test.js:37:24)
+
+  ● PDP decide() - lý do của từng nhánh › [U3] Role lạ "constructor" trong dữ liệu thành viên không có quyền nào (deny by default)
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "allow": false,
+    -   "reason": "role_lacks_permission",
+    +   "reason": "deny_all",
+      }
+
+      35 |       db.addMember({ projectId: 'alpha', userId: 'erin', role })
+      36 |       const decision = decide(db.findUser('erin'), 'task:read', resourceOfTask('A1'))
+    > 37 |       expect(decision).toMatchObject({ allow: false, reason: 'role_lacks_permission' })
+         |                        ^
+      38 |     },
+      39 |   )
+      40 |
+
+      at toMatchObject (test/policy.unit.test.js:37:24)
+
+  ● PDP decide() - lý do của từng nhánh › [U3] Role lạ "toString" trong dữ liệu thành viên không có quyền nào (deny by default)
+
+    expect(received).toMatchObject(expected)
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+        "allow": false,
+    -   "reason": "role_lacks_permission",
+    +   "reason": "deny_all",
+      }
+
+      35 |       db.addMember({ projectId: 'alpha', userId: 'erin', role })
+      36 |       const decision = decide(db.findUser('erin'), 'task:read', resourceOfTask('A1'))
+    > 37 |       expect(decision).toMatchObject({ allow: false, reason: 'role_lacks_permission' })
+         |                        ^
+      38 |     },
+      39 |   )
+      40 |
+
+      at toMatchObject (test/policy.unit.test.js:37:24)
+
+FAIL [deny-all] test/consistency.test.js
+  Nhất quán giữa check (GET /tasks/:id) và list (GET /tasks)
+    × [C1] alice: task trong danh sách đúng bằng các task đọc được từng cái (22 ms)
+    × [C1] bob: task trong danh sách đúng bằng các task đọc được từng cái (22 ms)
+    × [C1] vera: task trong danh sách đúng bằng các task đọc được từng cái (20 ms)
+    × [C1] charlie: task trong danh sách đúng bằng các task đọc được từng cái (24 ms)
+    √ [C1] erin: task trong danh sách đúng bằng các task đọc được từng cái (22 ms)
+    × [C1] dana: task trong danh sách đúng bằng các task đọc được từng cái (21 ms)
+    √ [C2] Danh sách theo từng người: không ai thấy task ngoài phạm vi (21 ms)
+    √ [C3] Sau khi bị gỡ khỏi project, task biến mất khỏi cả check lẫn list (9 ms)
+
+  ● Nhất quán giữa check (GET /tasks/:id) và list (GET /tasks) › [C1] alice: task trong danh sách đúng bằng các task đọc được từng cái
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 4
+
+    - Array []
+    + Array [
+    +   "A1",
+    +   "A2",
+    + ]
+
+      19 |       if (res.status === 200) readable.push(id)
+      20 |     }
+    > 21 |     expect(list.body.map(t => t.id).sort()).toEqual(readable.sort())
+         |                                             ^
+      22 |   })
+      23 |
+      24 |   test('[C2] Danh sách theo từng người: không ai thấy task ngoài phạm vi', async () => {
+
+      at toEqual (test/consistency.test.js:21:45)
+
+  ● Nhất quán giữa check (GET /tasks/:id) và list (GET /tasks) › [C1] bob: task trong danh sách đúng bằng các task đọc được từng cái
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 4
+
+    - Array []
+    + Array [
+    +   "A1",
+    +   "A2",
+    + ]
+
+      19 |       if (res.status === 200) readable.push(id)
+      20 |     }
+    > 21 |     expect(list.body.map(t => t.id).sort()).toEqual(readable.sort())
+         |                                             ^
+      22 |   })
+      23 |
+      24 |   test('[C2] Danh sách theo từng người: không ai thấy task ngoài phạm vi', async () => {
+
+      at toEqual (test/consistency.test.js:21:45)
+
+  ● Nhất quán giữa check (GET /tasks/:id) và list (GET /tasks) › [C1] vera: task trong danh sách đúng bằng các task đọc được từng cái
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 4
+
+    - Array []
+    + Array [
+    +   "A1",
+    +   "A2",
+    + ]
+
+      19 |       if (res.status === 200) readable.push(id)
+      20 |     }
+    > 21 |     expect(list.body.map(t => t.id).sort()).toEqual(readable.sort())
+         |                                             ^
+      22 |   })
+      23 |
+      24 |   test('[C2] Danh sách theo từng người: không ai thấy task ngoài phạm vi', async () => {
+
+      at toEqual (test/consistency.test.js:21:45)
+
+  ● Nhất quán giữa check (GET /tasks/:id) và list (GET /tasks) › [C1] charlie: task trong danh sách đúng bằng các task đọc được từng cái
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 4
+
+    - Array []
+    + Array [
+    +   "B1",
+    +   "B2",
+    + ]
+
+      19 |       if (res.status === 200) readable.push(id)
+      20 |     }
+    > 21 |     expect(list.body.map(t => t.id).sort()).toEqual(readable.sort())
+         |                                             ^
+      22 |   })
+      23 |
+      24 |   test('[C2] Danh sách theo từng người: không ai thấy task ngoài phạm vi', async () => {
+
+      at toEqual (test/consistency.test.js:21:45)
+
+  ● Nhất quán giữa check (GET /tasks/:id) và list (GET /tasks) › [C1] dana: task trong danh sách đúng bằng các task đọc được từng cái
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 4
+
+    - Array []
+    + Array [
+    +   "A1",
+    +   "A2",
+    + ]
+
+      19 |       if (res.status === 200) readable.push(id)
+      20 |     }
+    > 21 |     expect(list.body.map(t => t.id).sort()).toEqual(readable.sort())
+         |                                             ^
+      22 |   })
+      23 |
+      24 |   test('[C2] Danh sách theo từng người: không ai thấy task ngoài phạm vi', async () => {
+
+      at toEqual (test/consistency.test.js:21:45)
+
+Test Suites: 6 failed, 6 total
+Tests:       51 failed, 19 passed, 70 total
+Snapshots:   0 total
+Time:        2.401 s
+Ran all test suites.
