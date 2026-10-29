@@ -17,13 +17,19 @@ const allow = reason => ({ allow: true, reason })
 // visible = false: người gọi không được biết resource tồn tại (PEP trả 404 thay vì 403).
 const deny = (reason, { visible }) => ({ allow: false, visible, reason })
 
-function decide(user, action, { project }) {
+function decide(user, action, { project, task }) {
   // ReBAC: người gọi phải là thành viên của project chứa resource.
   const membership = db.findMembership(user.id, project.id)
   if (!membership) return deny('not_member', { visible: false })
 
   // RBAC: role lấy từ bảng thành viên, không lấy từ request.
   if (!permissionsOf(membership.role).includes(action)) return deny('role_lacks_permission', { visible: true })
+
+  // ABAC: Member chỉ sửa task được giao cho mình khi task còn Open (thuộc tính của bản ghi đang lưu).
+  if (action === 'task:edit' && membership.role === 'Member') {
+    if (task.assignee !== user.id) return deny('not_assignee', { visible: true })
+    if (task.status !== 'Open') return deny('task_closed', { visible: true })
+  }
 
   return allow(`role:${membership.role}`)
 }

@@ -1,0 +1,92 @@
+FAIL [src@v2] test/v3.rebac-abac.test.js
+  V3 - Member chỉ sửa task được giao cho mình khi task còn Open
+    √ [O11] Bob sửa A1 (giao cho Bob, Open) -> 200 (65 ms)
+    × [O12] Bob sửa A2 (chưa được giao) -> 403, A2 không đổi (13 ms)
+    × [O13] Bob sửa A1 khi A1 đã Closed -> 403 (6 ms)
+    √ [O14] Bob sửa B1 (project khác) -> 404 (8 ms)
+  V3 - điều kiện lấy từ dữ liệu đang lưu, không lấy từ body
+    × [E3] Bob gửi assignee=bob để sửa A2 -> 403, A2 vẫn chưa giao (7 ms)
+    × [E16] Bob đóng A1 được, nhưng gửi status=Open để mở lại thì bị từ chối (14 ms)
+  V3 - kết hợp RBAC, ReBAC và ABAC
+    √ [E17] Owner sửa A2 dù không được giao -> 200 (điều kiện assignee chỉ áp cho Member) (7 ms)
+    √ [E18] Owner mở lại task đã đóng -> 200 (8 ms)
+    √ [E20] Viewer được giao task vẫn không sửa được -> 403 (assignee không thay role) (9 ms)
+    √ [E21] Bob vẫn là assignee của A1 nhưng đã bị gỡ khỏi project -> 404 (cần quan hệ member) (6 ms)
+
+  ● V3 - Member chỉ sửa task được giao cho mình khi task còn Open › [O12] Bob sửa A2 (chưa được giao) -> 403, A2 không đổi
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v3.rebac-abac.test.js:18:5)
+
+  ● V3 - Member chỉ sửa task được giao cho mình khi task còn Open › [O13] Bob sửa A1 khi A1 đã Closed -> 403
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v3.rebac-abac.test.js:25:5)
+
+  ● V3 - điều kiện lấy từ dữ liệu đang lưu, không lấy từ body › [E3] Bob gửi assignee=bob để sửa A2 -> 403, A2 vẫn chưa giao
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v3.rebac-abac.test.js:39:5)
+
+  ● V3 - điều kiện lấy từ dữ liệu đang lưu, không lấy từ body › [E16] Bob đóng A1 được, nhưng gửi status=Open để mở lại thì bị từ chối
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v3.rebac-abac.test.js:48:5)
+
+Test Suites: 1 failed, 1 total
+Tests:       4 failed, 6 passed, 10 total
+Snapshots:   0 total
+Time:        1.285 s
+Ran all test suites matching test/v3.rebac-abac.test.js.
