@@ -10,7 +10,9 @@
     "token": "node scripts/token.js"
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "verbose": true,
+    "reporters": ["default"]
   },
   "dependencies": {
     "express": "^5.3.0",

@@ -2,13 +2,13 @@ const router = require('express').Router()
 const db = require('../db')
 const { requireScope } = require('../auth')
 const { notFound } = require('../errors')
+const taskService = require('../services/taskService')
 
-// STARTER: mọi người đã đăng nhập đều gọi được các chức năng quản lý project (lỗi BFLA có chủ đích).
 router.get('/:id/tasks', requireScope('tasks:read'), (req, res) => {
-  if (!db.findProject(req.params.id)) throw notFound()
-  res.json(db.listTasksByProject(req.params.id))
+  res.json(taskService.listProjectTasks(req.user, req.params.id))
 })
 
+// STARTER: mọi người đã đăng nhập đều gọi được các chức năng quản lý project (lỗi BFLA có chủ đích), sửa ở V2.
 router.delete('/:id', requireScope('projects:manage'), (req, res) => {
   if (!db.findProject(req.params.id)) throw notFound()
   db.deleteProject(req.params.id)

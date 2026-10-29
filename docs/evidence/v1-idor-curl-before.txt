@@ -1,0 +1,16 @@
+$ curl -i http://localhost:3006/tasks/A1 -H 'Authorization: Bearer <token Alice>'
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Content-Length: 156
+
+{"id":"A1","projectId":"alpha","title":"Thiết kế màn hình đăng nhập","description":"Wireframe và luồng lỗi","assignee":"bob","status":"Open"}
+
+
+$ curl -i http://localhost:3006/tasks/B1 -H 'Authorization: Bearer <token Alice>'
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Content-Length: 162
+
+{"id":"B1","projectId":"beta","title":"Kế hoạch ra mắt Beta","description":"Dữ liệu nội bộ của project Beta","assignee":"charlie","status":"Open"}
+
+

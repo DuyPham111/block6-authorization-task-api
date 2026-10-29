@@ -1,0 +1,19 @@
+PASS test/v1.idor.test.js
+  V1 - object-level authorization khi đọc task
+    √ [O1] Anonymous đọc A1 -> 401 (60 ms)
+    √ [O2] Alice đọc A1 (cùng project) -> 200 (17 ms)
+    √ [O3] Alice đọc B1 (project Beta) -> 404, không lộ nội dung (11 ms)
+    √ [O4] Charlie đọc B1 (Owner Beta) -> 200 (8 ms)
+    √ [E1] Token của Alice đã hết hạn -> 401 (8 ms)
+    √ [E2] Task không tồn tại -> 404, body giống hệt khi bị che (không dò được ID) (18 ms)
+    √ [E4] Alice đọc danh sách task của project Beta -> 404 (entry point thứ hai) (10 ms)
+    √ [E4b] Alice đọc danh sách task của project Alpha -> 200, chỉ có task Alpha (11 ms)
+    √ [E6] Bob tự khai userId=charlie (query, header, body) vẫn không đọc được B1 (24 ms)
+    √ [E7] Token chỉ có scope tasks:read: đọc được A1 nhưng vẫn không đọc được B1 (17 ms)
+    √ [E8] Token thiếu scope tasks:read -> 403 insufficient_scope dù Alice là Owner (14 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       11 passed, 11 total
+Snapshots:   0 total
+Time:        0.908 s, estimated 1 s
+Ran all test suites.

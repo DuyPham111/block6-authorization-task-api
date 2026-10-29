@@ -1,0 +1,108 @@
+FAIL [src@starter] test/v1.idor.test.js
+  V1 - object-level authorization khi đọc task
+    √ [O1] Anonymous đọc A1 -> 401 (82 ms)
+    √ [O2] Alice đọc A1 (cùng project) -> 200 (28 ms)
+    × [O3] Alice đọc B1 (project Beta) -> 404, không lộ nội dung (19 ms)
+    √ [O4] Charlie đọc B1 (Owner Beta) -> 200 (12 ms)
+    √ [E1] Token của Alice đã hết hạn -> 401 (12 ms)
+    × [E2] Task không tồn tại -> 404, body giống hệt khi bị che (không dò được ID) (23 ms)
+    × [E4] Alice đọc danh sách task của project Beta -> 404 (entry point thứ hai) (12 ms)
+    √ [E4b] Alice đọc danh sách task của project Alpha -> 200, chỉ có task Alpha (14 ms)
+    × [E6] Bob tự khai userId=charlie (query, header, body) vẫn không đọc được B1 (27 ms)
+    × [E7] Token chỉ có scope tasks:read: đọc được A1 nhưng vẫn không đọc được B1 (24 ms)
+    √ [E8] Token thiếu scope tasks:read -> 403 insufficient_scope dù Alice là Owner (13 ms)
+
+  ● V1 - object-level authorization khi đọc task › [O3] Alice đọc B1 (project Beta) -> 404, không lộ nội dung
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v1.idor.test.js:20:5)
+
+  ● V1 - object-level authorization khi đọc task › [E2] Task không tồn tại -> 404, body giống hệt khi bị che (không dò được ID)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 200
+
+      36 |     const hidden = await api().get('/tasks/B1').set('Authorization', bearer('alice'))
+      37 |     expect(missing.status).toBe(404)
+    > 38 |     expect(hidden.status).toBe(404)
+         |                           ^
+      39 |     expect(hidden.body).toEqual(missing.body)
+      40 |   })
+      41 |
+
+      at Object.toBe (test/v1.idor.test.js:38:27)
+
+  ● V1 - object-level authorization khi đọc task › [E4] Alice đọc danh sách task của project Beta -> 404 (entry point thứ hai)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v1.idor.test.js:44:5)
+
+  ● V1 - object-level authorization khi đọc task › [E6] Bob tự khai userId=charlie (query, header, body) vẫn không đọc được B1
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v1.idor.test.js:59:5)
+
+  ● V1 - object-level authorization khi đọc task › [E7] Token chỉ có scope tasks:read: đọc được A1 nhưng vẫn không đọc được B1
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v1.idor.test.js:67:5)
+
+Test Suites: 1 failed, 1 total
+Tests:       5 failed, 6 passed, 11 total
+Snapshots:   0 total
+Time:        1.857 s
+Ran all test suites matching test/v1.idor.test.js.
