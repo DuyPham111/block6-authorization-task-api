@@ -1,0 +1,32 @@
+PASS test/v2.rbac.test.js
+  V2 - permission matrix theo role trong project
+    √ [M1] Viewer đọc task -> allow=true (88 ms)
+    √ [O5] Viewer sửa task -> allow=false (21 ms)
+    √ [M2] Viewer xóa project -> allow=false (10 ms)
+    √ [M3] Viewer quản lý thành viên -> allow=false (7 ms)
+    √ [M4] Member đọc task -> allow=true (7 ms)
+    √ [M5] Member sửa task -> allow=true (7 ms)
+    √ [O6] Member xóa project -> allow=false (8 ms)
+    √ [O7] Member quản lý thành viên -> allow=false (6 ms)
+    √ [M6] Owner đọc task -> allow=true (9 ms)
+    √ [M7] Owner sửa task -> allow=true (6 ms)
+    √ [O8] Owner xóa project -> allow=true (6 ms)
+    √ [O9] Owner quản lý thành viên -> allow=true (7 ms)
+  V2 - role không lấy từ request
+    √ [O10] Bob tự gửi role=Admin (body, header, query) để xóa project -> 403 (7 ms)
+    √ [E12] Member tự thêm mình làm Owner -> 403, role vẫn là Member (7 ms)
+    √ [E10] Owner mời thành viên với role không có trong hệ thống (Admin) -> 400 (6 ms)
+  V2 - quản lý thành viên và thu hồi quyền
+    √ [E5] Owner gỡ Bob khỏi Alpha -> Bob mất quyền đọc A1 ngay lập tức (16 ms)
+    √ [E13] Member gỡ thành viên khác -> 403, Vera vẫn còn trong project (6 ms)
+    √ [E11] Không gỡ được Owner cuối cùng của project -> 409 (6 ms)
+    √ [E14] Owner Beta không quản lý được thành viên project Alpha -> 404 (6 ms)
+  V2 - PATCH chỉ nhận field được phép
+    √ [E9] Owner gửi projectId/id trong body -> bị bỏ qua, task vẫn thuộc Alpha (7 ms)
+    √ [E15] Status ngoài Open/Closed -> 400 (7 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       21 passed, 21 total
+Snapshots:   0 total
+Time:        1.334 s
+Ran all test suites matching test/v2.rbac.test.js.

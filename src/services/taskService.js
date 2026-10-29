@@ -1,6 +1,14 @@
-// PEP cho task: mọi entry point (route, job, export) đọc task qua service này.
+// PEP cho task: mọi entry point (route, job, export) đọc và sửa task qua service này.
 const db = require('../db')
 const { loadTask, loadProject, enforce } = require('./access')
+const { badRequest } = require('../errors')
+
+// Chỉ các field này được sửa qua PATCH; id, projectId, assignee bị bỏ qua (chống mass assignment).
+const EDITABLE_FIELDS = ['title', 'description', 'status']
+const STATUSES = ['Open', 'Closed']
+
+const pick = (body, fields) =>
+  Object.fromEntries(fields.filter(f => Object.hasOwn(body, f)).map(f => [f, body[f]]))
 
 function getTask(user, taskId) {
   const resource = loadTask(taskId)
@@ -15,4 +23,14 @@ function listProjectTasks(user, projectId) {
   return db.listTasksByProject(projectId)
 }
 
-module.exports = { getTask, listProjectTasks }
+function updateTask(user, taskId, body = {}) {
+  const resource = loadTask(taskId)
+  // Kiểm quyền trên bản ghi đang lưu, trước khi áp dụng bất kỳ thay đổi nào từ body.
+  enforce(user, 'task:edit', resource)
+
+  const patch = pick(body, EDITABLE_FIELDS)
+  if ('status' in patch && !STATUSES.includes(patch.status)) throw badRequest('invalid_status')
+  return db.updateTask(taskId, patch)
+}
+
+module.exports = { getTask, listProjectTasks, updateTask }

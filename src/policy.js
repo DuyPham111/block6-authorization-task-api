@@ -2,6 +2,17 @@
 // Hàm thuần, không biết gì về HTTP. `resource` = { project, task? } luôn được nạp từ DB.
 const db = require('./db')
 
+// RBAC: permission gắn với role trong phạm vi một project.
+const ROLE_PERMISSIONS = {
+  Viewer: ['task:read'],
+  Member: ['task:read', 'task:edit'],
+  Owner: ['task:read', 'task:edit', 'project:delete', 'member:manage'],
+}
+const ROLES = Object.keys(ROLE_PERMISSIONS)
+
+// Role lạ (kể cả '__proto__', 'constructor') không có quyền nào: deny by default.
+const permissionsOf = role => (Object.hasOwn(ROLE_PERMISSIONS, role) ? ROLE_PERMISSIONS[role] : [])
+
 const allow = reason => ({ allow: true, reason })
 // visible = false: người gọi không được biết resource tồn tại (PEP trả 404 thay vì 403).
 const deny = (reason, { visible }) => ({ allow: false, visible, reason })
@@ -11,7 +22,10 @@ function decide(user, action, { project }) {
   const membership = db.findMembership(user.id, project.id)
   if (!membership) return deny('not_member', { visible: false })
 
-  return allow('member')
+  // RBAC: role lấy từ bảng thành viên, không lấy từ request.
+  if (!permissionsOf(membership.role).includes(action)) return deny('role_lacks_permission', { visible: true })
+
+  return allow(`role:${membership.role}`)
 }
 
-module.exports = { decide }
+module.exports = { decide, ROLES, ROLE_PERMISSIONS }

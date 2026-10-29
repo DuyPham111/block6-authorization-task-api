@@ -1,0 +1,259 @@
+FAIL [src@v1] test/v2.rbac.test.js
+  V2 - permission matrix theo role trong project
+    √ [M1] Viewer đọc task -> allow=true (57 ms)
+    × [O5] Viewer sửa task -> allow=false (21 ms)
+    × [M2] Viewer xóa project -> allow=false (8 ms)
+    × [M3] Viewer quản lý thành viên -> allow=false (7 ms)
+    √ [M4] Member đọc task -> allow=true (7 ms)
+    √ [M5] Member sửa task -> allow=true (7 ms)
+    × [O6] Member xóa project -> allow=false (6 ms)
+    × [O7] Member quản lý thành viên -> allow=false (7 ms)
+    √ [M6] Owner đọc task -> allow=true (8 ms)
+    √ [M7] Owner sửa task -> allow=true (7 ms)
+    √ [O8] Owner xóa project -> allow=true (5 ms)
+    √ [O9] Owner quản lý thành viên -> allow=true (5 ms)
+  V2 - role không lấy từ request
+    × [O10] Bob tự gửi role=Admin (body, header, query) để xóa project -> 403 (6 ms)
+    × [E12] Member tự thêm mình làm Owner -> 403, role vẫn là Member (5 ms)
+    × [E10] Owner mời thành viên với role không có trong hệ thống (Admin) -> 400 (6 ms)
+  V2 - quản lý thành viên và thu hồi quyền
+    √ [E5] Owner gỡ Bob khỏi Alpha -> Bob mất quyền đọc A1 ngay lập tức (16 ms)
+    × [E13] Member gỡ thành viên khác -> 403, Vera vẫn còn trong project (5 ms)
+    × [E11] Không gỡ được Owner cuối cùng của project -> 409 (6 ms)
+    × [E14] Owner Beta không quản lý được thành viên project Alpha -> 404 (6 ms)
+  V2 - PATCH chỉ nhận field được phép
+    × [E9] Owner gửi projectId/id trong body -> bị bỏ qua, task vẫn thuộc Alpha (6 ms)
+    × [E15] Status ngoài Open/Closed -> 400 (6 ms)
+
+  ● V2 - permission matrix theo role trong project › [O5] Viewer sửa task -> allow=false
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at expectDenied (test/v2.rbac.test.js:56:7)
+
+  ● V2 - permission matrix theo role trong project › [M2] Viewer xóa project -> allow=false
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 204
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at expectDenied (test/v2.rbac.test.js:56:7)
+
+  ● V2 - permission matrix theo role trong project › [M3] Viewer quản lý thành viên -> allow=false
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 201
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at expectDenied (test/v2.rbac.test.js:56:7)
+
+  ● V2 - permission matrix theo role trong project › [O6] Member xóa project -> allow=false
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 204
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at expectDenied (test/v2.rbac.test.js:56:7)
+
+  ● V2 - permission matrix theo role trong project › [O7] Member quản lý thành viên -> allow=false
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 201
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at expectDenied (test/v2.rbac.test.js:56:7)
+
+  ● V2 - role không lấy từ request › [O10] Bob tự gửi role=Admin (body, header, query) để xóa project -> 403
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 204
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v2.rbac.test.js:69:5)
+
+  ● V2 - role không lấy từ request › [E12] Member tự thêm mình làm Owner -> 403, role vẫn là Member
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 201
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v2.rbac.test.js:78:5)
+
+  ● V2 - role không lấy từ request › [E10] Owner mời thành viên với role không có trong hệ thống (Admin) -> 400
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 201
+
+      85 |       .set('Authorization', bearer('alice'))
+      86 |       .send({ userId: 'erin', role: 'Admin' })
+    > 87 |     expect(res.status).toBe(400)
+         |                        ^
+      88 |     expect(db.findMembership('erin', 'alpha')).toBeUndefined()
+      89 |   })
+      90 | })
+
+      at Object.toBe (test/v2.rbac.test.js:87:24)
+
+  ● V2 - quản lý thành viên và thu hồi quyền › [E13] Member gỡ thành viên khác -> 403, Vera vẫn còn trong project
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 204
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v2.rbac.test.js:106:5)
+
+  ● V2 - quản lý thành viên và thu hồi quyền › [E11] Không gỡ được Owner cuối cùng của project -> 409
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 409
+    Received: 204
+
+      110 |   test('[E11] Không gỡ được Owner cuối cùng của project -> 409', async () => {
+      111 |     const res = await api().delete('/projects/alpha/members/alice').set('Authorization', bearer('alice'))
+    > 112 |     expect(res.status).toBe(409)
+          |                        ^
+      113 |     expect(db.findMembership('alice', 'alpha').role).toBe('Owner')
+      114 |   })
+      115 |
+
+      at Object.toBe (test/v2.rbac.test.js:112:24)
+
+  ● V2 - quản lý thành viên và thu hồi quyền › [E14] Owner Beta không quản lý được thành viên project Alpha -> 404
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 201
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v2.rbac.test.js:121:5)
+
+  ● V2 - PATCH chỉ nhận field được phép › [E9] Owner gửi projectId/id trong body -> bị bỏ qua, task vẫn thuộc Alpha
+
+    TypeError: Cannot read properties of undefined (reading 'title')
+
+      132 |     expect(res.status).toBe(200)
+      133 |     const task = db.findTask('A1')
+    > 134 |     expect(task.title).toBe('Đổi tên')
+          |                 ^
+      135 |     expect(task.projectId).toBe('alpha')
+      136 |     expect(db.findTask('HACK')).toBeUndefined()
+      137 |   })
+
+      at Object.title (test/v2.rbac.test.js:134:17)
+
+  ● V2 - PATCH chỉ nhận field được phép › [E15] Status ngoài Open/Closed -> 400
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 200
+
+      139 |   test('[E15] Status ngoài Open/Closed -> 400', async () => {
+      140 |     const res = await api().patch('/tasks/A1').set('Authorization', bearer('alice')).send({ status: 'Deleted' })
+    > 141 |     expect(res.status).toBe(400)
+          |                        ^
+      142 |     expect(db.findTask('A1').status).toBe('Open')
+      143 |   })
+      144 | })
+
+      at Object.toBe (test/v2.rbac.test.js:141:24)
+
+Test Suites: 1 failed, 1 total
+Tests:       13 failed, 8 passed, 21 total
+Snapshots:   0 total
+Time:        1.353 s
+Ran all test suites matching test/v2.rbac.test.js.
