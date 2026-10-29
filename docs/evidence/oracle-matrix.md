@@ -22,7 +22,7 @@ Sinh bởi `node scripts/oracle-matrix.js`: chạy bộ test hiện tại trên 
 | O16 | Dana đọc B1 (tenant Beta) -> 404 | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
 | O17 | Dana đọc B1 với header X-Tenant-Id: beta -> 404 | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
 | | **Oracle qua** | **6/17** | **7/17** | **12/17** | **14/17** | **15/17** | **17/17** | **17/17** |
-| | Toàn bộ test qua | 16/58 | 22/58 | 38/58 | 42/58 | 44/58 | 50/58 | 58/58 |
+| | Toàn bộ test qua | 16/58 | 23/70 | 46/70 | 52/70 | 54/70 | 62/70 | 70/70 |
 
 Ghi chú:
 
