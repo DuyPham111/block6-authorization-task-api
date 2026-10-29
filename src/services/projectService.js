@@ -16,7 +16,9 @@ function addMember(user, projectId, { userId, role } = {}) {
   enforce(user, 'member:manage', resource)
 
   if (!ROLES.includes(role)) throw badRequest('invalid_role')
-  if (!db.findUser(userId)) throw badRequest('invalid_user')
+  // Chỉ thêm được user cùng tenant với project: membership không được vượt tenant boundary.
+  const target = db.findUser(userId)
+  if (!target || target.tenantId !== resource.project.tenantId) throw badRequest('invalid_user')
   if (db.findMembership(userId, projectId)) throw conflict('already_member')
   return db.addMember({ projectId, userId, role })
 }

@@ -1,0 +1,18 @@
+PASS test/v4.tenant.test.js
+  V4 - Admin tenant Alpha không vượt tenant boundary
+    √ [O15] Dana (Admin tenant Alpha) đọc A1 -> 200 (64 ms)
+    √ [O16] Dana đọc B1 (tenant Beta) -> 404 (11 ms)
+    √ [O17] Dana đọc B1 với header X-Tenant-Id: beta -> 404 (7 ms)
+    √ [E22] Dana gửi tenantId=beta trong query và body -> 404 (17 ms)
+    √ [E23] Dana xem danh sách hoặc xóa project Beta -> 404, Beta vẫn còn (14 ms)
+  V4 - quyền Admin bên trong tenant của mình
+    √ [E24] Dana quản lý thành viên project Alpha dù không phải member -> 201 (6 ms)
+  V4 - dữ liệu thành viên không vượt tenant
+    √ [E25] Membership chéo tenant (dữ liệu lỗi) vẫn bị chặn bởi tenant boundary -> 404 (7 ms)
+    √ [E26] Owner Alpha thêm user của tenant Beta vào project -> 400 (8 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       8 passed, 8 total
+Snapshots:   0 total
+Time:        1.095 s
+Ran all test suites matching test/v4.tenant.test.js.

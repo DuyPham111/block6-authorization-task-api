@@ -1,0 +1,125 @@
+FAIL [src@v4-pre] test/v4.tenant.test.js
+  V4 - Admin tenant Alpha không vượt tenant boundary
+    √ [O15] Dana (Admin tenant Alpha) đọc A1 -> 200 (64 ms)
+    × [O16] Dana đọc B1 (tenant Beta) -> 404 (14 ms)
+    × [O17] Dana đọc B1 với header X-Tenant-Id: beta -> 404 (7 ms)
+    × [E22] Dana gửi tenantId=beta trong query và body -> 404 (18 ms)
+    × [E23] Dana xem danh sách hoặc xóa project Beta -> 404, Beta vẫn còn (8 ms)
+  V4 - quyền Admin bên trong tenant của mình
+    √ [E24] Dana quản lý thành viên project Alpha dù không phải member -> 201 (8 ms)
+  V4 - dữ liệu thành viên không vượt tenant
+    × [E25] Membership chéo tenant (dữ liệu lỗi) vẫn bị chặn bởi tenant boundary -> 404 (7 ms)
+    × [E26] Owner Alpha thêm user của tenant Beta vào project -> 400 (9 ms)
+
+  ● V4 - Admin tenant Alpha không vượt tenant boundary › [O16] Dana đọc B1 (tenant Beta) -> 404
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v4.tenant.test.js:17:5)
+
+  ● V4 - Admin tenant Alpha không vượt tenant boundary › [O17] Dana đọc B1 với header X-Tenant-Id: beta -> 404
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v4.tenant.test.js:22:5)
+
+  ● V4 - Admin tenant Alpha không vượt tenant boundary › [E22] Dana gửi tenantId=beta trong query và body -> 404
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v4.tenant.test.js:27:5)
+
+  ● V4 - Admin tenant Alpha không vượt tenant boundary › [E23] Dana xem danh sách hoặc xóa project Beta -> 404, Beta vẫn còn
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v4.tenant.test.js:32:5)
+
+  ● V4 - dữ liệu thành viên không vượt tenant › [E25] Membership chéo tenant (dữ liệu lỗi) vẫn bị chặn bởi tenant boundary -> 404
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 200
+
+       8 | // Response từ chối phải đúng mã và không chứa dữ liệu của resource.
+       9 | function expectDenied(res, status) {
+    > 10 |   expect(res.status).toBe(status)
+         |                      ^
+      11 |   expect(Array.isArray(res.body)).toBe(false)
+      12 |   expect(res.body).not.toHaveProperty('title')
+      13 |   expect(res.body).not.toHaveProperty('description')
+
+      at toBe (test/helpers.js:10:22)
+      at Object.expectDenied (test/v4.tenant.test.js:51:5)
+
+  ● V4 - dữ liệu thành viên không vượt tenant › [E26] Owner Alpha thêm user của tenant Beta vào project -> 400
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 201
+
+      57 |       .set('Authorization', bearer('alice'))
+      58 |       .send({ userId: 'charlie', role: 'Viewer' })
+    > 59 |     expect(res.status).toBe(400)
+         |                        ^
+      60 |     expect(db.findMembership('charlie', 'alpha')).toBeUndefined()
+      61 |   })
+      62 | })
+
+      at Object.toBe (test/v4.tenant.test.js:59:24)
+
+Test Suites: 1 failed, 1 total
+Tests:       6 failed, 2 passed, 8 total
+Snapshots:   0 total
+Time:        1.492 s
+Ran all test suites matching test/v4.tenant.test.js.
