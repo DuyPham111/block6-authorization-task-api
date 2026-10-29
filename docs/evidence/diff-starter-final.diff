@@ -1,0 +1,306 @@
+diff --git a/src/db.js b/src/db.js
+index a105942..647f3d1 100644
+--- a/src/db.js
++++ b/src/db.js
+@@ -1,15 +1,20 @@
+ // Dữ liệu in-memory cho lab. resetDb() đưa dữ liệu về seed để mỗi test chạy độc lập.
+ const SEED = {
++  tenants: [
++    { id: 'alpha', name: 'Tenant Alpha' },
++    { id: 'beta', name: 'Tenant Beta' },
++  ],
+   users: [
+-    { id: 'alice', name: 'Alice' },
+-    { id: 'bob', name: 'Bob' },
+-    { id: 'vera', name: 'Vera' },
+-    { id: 'charlie', name: 'Charlie' },
+-    { id: 'erin', name: 'Erin' },
++    { id: 'alice', name: 'Alice', tenantId: 'alpha' },
++    { id: 'bob', name: 'Bob', tenantId: 'alpha' },
++    { id: 'vera', name: 'Vera', tenantId: 'alpha' },
++    { id: 'erin', name: 'Erin', tenantId: 'alpha' },
++    { id: 'dana', name: 'Dana', tenantId: 'alpha', tenantRole: 'Admin' },
++    { id: 'charlie', name: 'Charlie', tenantId: 'beta' },
+   ],
+   projects: [
+-    { id: 'alpha', name: 'Project Alpha' },
+-    { id: 'beta', name: 'Project Beta' },
++    { id: 'alpha', name: 'Project Alpha', tenantId: 'alpha' },
++    { id: 'beta', name: 'Project Beta', tenantId: 'beta' },
+   ],
+   members: [
+     { projectId: 'alpha', userId: 'alice', role: 'Owner' },
+@@ -37,7 +42,10 @@ const findTask = id => state.tasks.find(t => t.id === id)
+ const findMembership = (userId, projectId) =>
+   state.members.find(m => m.userId === userId && m.projectId === projectId)
+ const listMembers = projectId => state.members.filter(m => m.projectId === projectId)
++const listProjects = () => state.projects
+ const listTasksByProject = projectId => state.tasks.filter(t => t.projectId === projectId)
++// Tương đương SELECT * FROM tasks WHERE project_id IN (:ids): một truy vấn cho cả danh sách.
++const listTasksInProjects = projectIds => state.tasks.filter(t => projectIds.includes(t.projectId))
+ 
+ function updateTask(id, patch) {
+   const task = findTask(id)
+@@ -69,7 +77,9 @@ module.exports = {
+   findTask,
+   findMembership,
+   listMembers,
++  listProjects,
+   listTasksByProject,
++  listTasksInProjects,
+   updateTask,
+   deleteProject,
+   addMember,
+diff --git a/src/policy.js b/src/policy.js
+new file mode 100644
+index 0000000..3b035f9
+--- /dev/null
++++ b/src/policy.js
+@@ -0,0 +1,52 @@
++// PDP (Policy Decision Point): trả lời allow(subject, action, resource).
++// Hàm thuần, không biết gì về HTTP. `resource` = { project, task? } luôn được nạp từ DB.
++const db = require('./db')
++
++// RBAC: permission gắn với role trong phạm vi một project.
++const ROLE_PERMISSIONS = {
++  Viewer: ['task:read'],
++  Member: ['task:read', 'task:edit'],
++  Owner: ['task:read', 'task:edit', 'project:delete', 'member:manage'],
++}
++const ROLES = Object.keys(ROLE_PERMISSIONS)
++
++// Role lạ (kể cả '__proto__', 'constructor') không có quyền nào: deny by default.
++const permissionsOf = role => (Object.hasOwn(ROLE_PERMISSIONS, role) ? ROLE_PERMISSIONS[role] : [])
++
++const allow = reason => ({ allow: true, reason })
++// visible = false: người gọi không được biết resource tồn tại (PEP trả 404 thay vì 403).
++const deny = (reason, { visible }) => ({ allow: false, visible, reason })
++
++function decide(user, action, { project, task }) {
++  // Tenant boundary: đứng trước mọi role, kể cả Admin. Tenant của người gọi lấy từ DB, không từ header.
++  if (user.tenantId !== project.tenantId) return deny('other_tenant', { visible: false })
++
++  // Admin của tenant: toàn quyền, nhưng chỉ trong tenant của mình.
++  if (user.tenantRole === 'Admin') return allow('tenant_admin')
++
++  // ReBAC: người gọi phải là thành viên của project chứa resource.
++  const membership = db.findMembership(user.id, project.id)
++  if (!membership) return deny('not_member', { visible: false })
++
++  // RBAC: role lấy từ bảng thành viên, không lấy từ request.
++  if (!permissionsOf(membership.role).includes(action)) return deny('role_lacks_permission', { visible: true })
++
++  // ABAC: Member chỉ sửa task được giao cho mình khi task còn Open (thuộc tính của bản ghi đang lưu).
++  if (action === 'task:edit' && membership.role === 'Member') {
++    if (task.assignee !== user.id) return deny('not_assignee', { visible: true })
++    if (task.status !== 'Open') return deny('task_closed', { visible: true })
++  }
++
++  return allow(`role:${membership.role}`)
++}
++
++// Bản "list" của rule task:read: các project người gọi được đọc, để lọc ngay trong truy vấn danh sách
++// (SQL tương đương: JOIN project_members ... WHERE tenant_id = :tenant).
++// Phải khớp với decide(); test/consistency.test.js đối chiếu hai đường này cho mọi user × task.
++function readableProjectIds(user) {
++  const inTenant = db.listProjects().filter(p => p.tenantId === user.tenantId)
++  if (user.tenantRole === 'Admin') return inTenant.map(p => p.id)
++  return inTenant.filter(p => db.findMembership(user.id, p.id)).map(p => p.id)
++}
++
++module.exports = { decide, readableProjectIds, ROLES, ROLE_PERMISSIONS }
+diff --git a/src/routes/projects.js b/src/routes/projects.js
+index c13a152..b2646bd 100644
+--- a/src/routes/projects.js
++++ b/src/routes/projects.js
+@@ -1,29 +1,24 @@
+ const router = require('express').Router()
+-const db = require('../db')
+ const { requireScope } = require('../auth')
+-const { notFound } = require('../errors')
++const taskService = require('../services/taskService')
++const projectService = require('../services/projectService')
+ 
+-// STARTER: mọi người đã đăng nhập đều gọi được các chức năng quản lý project (lỗi BFLA có chủ đích).
++// Route chỉ chuyển request vào service; kiểm quyền nằm trong service (business layer).
+ router.get('/:id/tasks', requireScope('tasks:read'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  res.json(db.listTasksByProject(req.params.id))
++  res.json(taskService.listProjectTasks(req.user, req.params.id))
+ })
+ 
+ router.delete('/:id', requireScope('projects:manage'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  db.deleteProject(req.params.id)
++  projectService.deleteProject(req.user, req.params.id)
+   res.sendStatus(204)
+ })
+ 
+ router.post('/:id/members', requireScope('projects:manage'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  const member = db.addMember({ projectId: req.params.id, userId: req.body.userId, role: req.body.role })
+-  res.status(201).json(member)
++  res.status(201).json(projectService.addMember(req.user, req.params.id, req.body))
+ })
+ 
+ router.delete('/:id/members/:userId', requireScope('projects:manage'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  db.removeMember(req.params.id, req.params.userId)
++  projectService.removeMember(req.user, req.params.id, req.params.userId)
+   res.sendStatus(204)
+ })
+ 
+diff --git a/src/routes/tasks.js b/src/routes/tasks.js
+index ab88a47..9cbaf71 100644
+--- a/src/routes/tasks.js
++++ b/src/routes/tasks.js
+@@ -1,19 +1,18 @@
+ const router = require('express').Router()
+-const db = require('../db')
+ const { requireScope } = require('../auth')
+-const { notFound } = require('../errors')
++const taskService = require('../services/taskService')
++
++// Route chỉ chuyển request vào service; kiểm quyền nằm trong service (business layer).
++router.get('/', requireScope('tasks:read'), (req, res) => {
++  res.json(taskService.listVisibleTasks(req.user))
++})
+ 
+-// STARTER: chỉ kiểm token và scope, KHÔNG kiểm quyền trên task (lỗi IDOR/BOLA có chủ đích).
+ router.get('/:id', requireScope('tasks:read'), (req, res) => {
+-  const task = db.findTask(req.params.id)
+-  if (!task) throw notFound()
+-  res.json(task)
++  res.json(taskService.getTask(req.user, req.params.id))
+ })
+ 
+ router.patch('/:id', requireScope('tasks:write'), (req, res) => {
+-  const task = db.findTask(req.params.id)
+-  if (!task) throw notFound()
+-  res.json(db.updateTask(task.id, req.body))
++  res.json(taskService.updateTask(req.user, req.params.id, req.body))
+ })
+ 
+ module.exports = router
+diff --git a/src/services/access.js b/src/services/access.js
+new file mode 100644
+index 0000000..c4fd482
+--- /dev/null
++++ b/src/services/access.js
+@@ -0,0 +1,25 @@
++// Phần dùng chung của PEP: nạp resource từ DB rồi áp dụng quyết định của PDP.
++const db = require('../db')
++const { decide } = require('../policy')
++const { notFound, forbidden } = require('../errors')
++
++// project luôn suy ra từ task đang lưu, không lấy projectId từ request.
++function loadTask(taskId) {
++  const task = db.findTask(taskId)
++  if (!task) throw notFound()
++  return { task, project: db.findProject(task.projectId) }
++}
++
++function loadProject(projectId) {
++  const project = db.findProject(projectId)
++  if (!project) throw notFound()
++  return { project }
++}
++
++function enforce(user, action, resource) {
++  const decision = decide(user, action, resource)
++  if (!decision.allow) throw decision.visible ? forbidden() : notFound()
++  return decision
++}
++
++module.exports = { loadTask, loadProject, enforce }
+diff --git a/src/services/projectService.js b/src/services/projectService.js
+new file mode 100644
+index 0000000..9783707
+--- /dev/null
++++ b/src/services/projectService.js
+@@ -0,0 +1,37 @@
++// PEP cho các chức năng quản lý project (chặn BFLA: gọi chức năng vượt role).
++const db = require('../db')
++const { ROLES } = require('../policy')
++const { loadProject, enforce } = require('./access')
++const { badRequest, notFound, conflict } = require('../errors')
++
++function deleteProject(user, projectId) {
++  const resource = loadProject(projectId)
++  enforce(user, 'project:delete', resource)
++  db.deleteProject(projectId)
++}
++
++// `role` ở đây là role của người được thêm, không phải role của người gọi.
++function addMember(user, projectId, { userId, role } = {}) {
++  const resource = loadProject(projectId)
++  enforce(user, 'member:manage', resource)
++
++  if (!ROLES.includes(role)) throw badRequest('invalid_role')
++  // Chỉ thêm được user cùng tenant với project: membership không được vượt tenant boundary.
++  const target = db.findUser(userId)
++  if (!target || target.tenantId !== resource.project.tenantId) throw badRequest('invalid_user')
++  if (db.findMembership(userId, projectId)) throw conflict('already_member')
++  return db.addMember({ projectId, userId, role })
++}
++
++function removeMember(user, projectId, userId) {
++  const resource = loadProject(projectId)
++  enforce(user, 'member:manage', resource)
++
++  const membership = db.findMembership(userId, projectId)
++  if (!membership) throw notFound()
++  const owners = db.listMembers(projectId).filter(m => m.role === 'Owner')
++  if (membership.role === 'Owner' && owners.length === 1) throw conflict('last_owner')
++  db.removeMember(projectId, userId)
++}
++
++module.exports = { deleteProject, addMember, removeMember }
+diff --git a/src/services/taskService.js b/src/services/taskService.js
+new file mode 100644
+index 0000000..5aaa2bd
+--- /dev/null
++++ b/src/services/taskService.js
+@@ -0,0 +1,42 @@
++// PEP cho task: mọi entry point (route, job, export) đọc và sửa task qua service này.
++const db = require('../db')
++const { readableProjectIds } = require('../policy')
++const { loadTask, loadProject, enforce } = require('./access')
++const { badRequest } = require('../errors')
++
++// Chỉ các field này được sửa qua PATCH; id, projectId, assignee bị bỏ qua (chống mass assignment).
++const EDITABLE_FIELDS = ['title', 'description', 'status']
++const STATUSES = ['Open', 'Closed']
++
++const pick = (body, fields) =>
++  Object.fromEntries(fields.filter(f => Object.hasOwn(body, f)).map(f => [f, body[f]]))
++
++function getTask(user, taskId) {
++  const resource = loadTask(taskId)
++  enforce(user, 'task:read', resource)
++  return resource.task
++}
++
++// Một quyết định cho cả project thay vì kiểm từng task (tránh N+1 truy vấn quyền).
++function listProjectTasks(user, projectId) {
++  const resource = loadProject(projectId)
++  enforce(user, 'task:read', resource)
++  return db.listTasksByProject(projectId)
++}
++
++// Danh sách mọi task người gọi được đọc: điều kiện quyền nằm trong truy vấn, không lọc sau khi tải.
++function listVisibleTasks(user) {
++  return db.listTasksInProjects(readableProjectIds(user))
++}
++
++function updateTask(user, taskId, body = {}) {
++  const resource = loadTask(taskId)
++  // Kiểm quyền trên bản ghi đang lưu, trước khi áp dụng bất kỳ thay đổi nào từ body.
++  enforce(user, 'task:edit', resource)
++
++  const patch = pick(body, EDITABLE_FIELDS)
++  if ('status' in patch && !STATUSES.includes(patch.status)) throw badRequest('invalid_status')
++  return db.updateTask(taskId, patch)
++}
++
++module.exports = { getTask, listProjectTasks, listVisibleTasks, updateTask }

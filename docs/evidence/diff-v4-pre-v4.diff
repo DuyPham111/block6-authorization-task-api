@@ -1,0 +1,33 @@
+diff --git a/src/policy.js b/src/policy.js
+index 80ec34c..087028b 100644
+--- a/src/policy.js
++++ b/src/policy.js
+@@ -18,8 +18,11 @@ const allow = reason => ({ allow: true, reason })
+ const deny = (reason, { visible }) => ({ allow: false, visible, reason })
+ 
+ function decide(user, action, { project, task }) {
+-  // V4-PRE (cố ý chưa đúng): Admin được coi là admin toàn cục, chưa có tenant boundary.
+-  if (user.tenantRole === 'Admin') return allow('admin')
++  // Tenant boundary: đứng trước mọi role, kể cả Admin. Tenant của người gọi lấy từ DB, không từ header.
++  if (user.tenantId !== project.tenantId) return deny('other_tenant', { visible: false })
++
++  // Admin của tenant: toàn quyền, nhưng chỉ trong tenant của mình.
++  if (user.tenantRole === 'Admin') return allow('tenant_admin')
+ 
+   // ReBAC: người gọi phải là thành viên của project chứa resource.
+   const membership = db.findMembership(user.id, project.id)
+diff --git a/src/services/projectService.js b/src/services/projectService.js
+index 61a7b0c..9783707 100644
+--- a/src/services/projectService.js
++++ b/src/services/projectService.js
+@@ -16,7 +16,9 @@ function addMember(user, projectId, { userId, role } = {}) {
+   enforce(user, 'member:manage', resource)
+ 
+   if (!ROLES.includes(role)) throw badRequest('invalid_role')
+-  if (!db.findUser(userId)) throw badRequest('invalid_user')
++  // Chỉ thêm được user cùng tenant với project: membership không được vượt tenant boundary.
++  const target = db.findUser(userId)
++  if (!target || target.tenantId !== resource.project.tenantId) throw badRequest('invalid_user')
+   if (db.findMembership(userId, projectId)) throw conflict('already_member')
+   return db.addMember({ projectId, userId, role })
+ }

@@ -55,5 +55,12 @@ const lines = [
   }),
   `| | **Oracle qua** | ${TAGS.map(tag => `**${oracle.filter(a => statusOf(tag, oracleId(a.title)) === '✅').length}/${oracle.length}**`).join(' | ')} |`,
   `| | Toàn bộ test qua | ${TAGS.map(tag => `${results[tag].filter(a => a.status === 'passed').length}/${results[tag].length}`).join(' | ')} |`,
+  '',
+  'Ghi chú:',
+  '',
+  '- O15 trượt từ `starter` đến `v3` vì user Dana và tenant chỉ được thêm ở `v4-pre` (token của Dana bị 401).',
+  '- `v4-pre` là trạng thái cố ý chưa đúng: Admin được coi là toàn cục, nên Dana đọc được B1 (O16, O17 trượt).',
+  '- Dòng "Toàn bộ test qua" ở `v4` chưa đủ 58 vì `GET /tasks` và test nhất quán chỉ có từ `final`.',
+  '- O8, O9, O11 qua ngay ở `starter`: đó là các request hợp lệ. Bản sửa phải giữ chúng xanh (không "từ chối hết").',
 ]
 console.log(lines.join('\n'))

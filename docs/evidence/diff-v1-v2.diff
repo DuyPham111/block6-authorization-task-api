@@ -1,0 +1,176 @@
+diff --git a/src/policy.js b/src/policy.js
+index 01e2f35..017b15d 100644
+--- a/src/policy.js
++++ b/src/policy.js
+@@ -2,6 +2,17 @@
+ // Hàm thuần, không biết gì về HTTP. `resource` = { project, task? } luôn được nạp từ DB.
+ const db = require('./db')
+ 
++// RBAC: permission gắn với role trong phạm vi một project.
++const ROLE_PERMISSIONS = {
++  Viewer: ['task:read'],
++  Member: ['task:read', 'task:edit'],
++  Owner: ['task:read', 'task:edit', 'project:delete', 'member:manage'],
++}
++const ROLES = Object.keys(ROLE_PERMISSIONS)
++
++// Role lạ (kể cả '__proto__', 'constructor') không có quyền nào: deny by default.
++const permissionsOf = role => (Object.hasOwn(ROLE_PERMISSIONS, role) ? ROLE_PERMISSIONS[role] : [])
++
+ const allow = reason => ({ allow: true, reason })
+ // visible = false: người gọi không được biết resource tồn tại (PEP trả 404 thay vì 403).
+ const deny = (reason, { visible }) => ({ allow: false, visible, reason })
+@@ -11,7 +22,10 @@ function decide(user, action, { project }) {
+   const membership = db.findMembership(user.id, project.id)
+   if (!membership) return deny('not_member', { visible: false })
+ 
+-  return allow('member')
++  // RBAC: role lấy từ bảng thành viên, không lấy từ request.
++  if (!permissionsOf(membership.role).includes(action)) return deny('role_lacks_permission', { visible: true })
++
++  return allow(`role:${membership.role}`)
+ }
+ 
+-module.exports = { decide }
++module.exports = { decide, ROLES, ROLE_PERMISSIONS }
+diff --git a/src/routes/projects.js b/src/routes/projects.js
+index 7a7f1c9..b2646bd 100644
+--- a/src/routes/projects.js
++++ b/src/routes/projects.js
+@@ -1,29 +1,24 @@
+ const router = require('express').Router()
+-const db = require('../db')
+ const { requireScope } = require('../auth')
+-const { notFound } = require('../errors')
+ const taskService = require('../services/taskService')
++const projectService = require('../services/projectService')
+ 
++// Route chỉ chuyển request vào service; kiểm quyền nằm trong service (business layer).
+ router.get('/:id/tasks', requireScope('tasks:read'), (req, res) => {
+   res.json(taskService.listProjectTasks(req.user, req.params.id))
+ })
+ 
+-// STARTER: mọi người đã đăng nhập đều gọi được các chức năng quản lý project (lỗi BFLA có chủ đích), sửa ở V2.
+ router.delete('/:id', requireScope('projects:manage'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  db.deleteProject(req.params.id)
++  projectService.deleteProject(req.user, req.params.id)
+   res.sendStatus(204)
+ })
+ 
+ router.post('/:id/members', requireScope('projects:manage'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  const member = db.addMember({ projectId: req.params.id, userId: req.body.userId, role: req.body.role })
+-  res.status(201).json(member)
++  res.status(201).json(projectService.addMember(req.user, req.params.id, req.body))
+ })
+ 
+ router.delete('/:id/members/:userId', requireScope('projects:manage'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  db.removeMember(req.params.id, req.params.userId)
++  projectService.removeMember(req.user, req.params.id, req.params.userId)
+   res.sendStatus(204)
+ })
+ 
+diff --git a/src/routes/tasks.js b/src/routes/tasks.js
+index cae9326..7092681 100644
+--- a/src/routes/tasks.js
++++ b/src/routes/tasks.js
+@@ -1,18 +1,14 @@
+ const router = require('express').Router()
+-const db = require('../db')
+ const { requireScope } = require('../auth')
+-const { notFound } = require('../errors')
+ const taskService = require('../services/taskService')
+ 
++// Route chỉ chuyển request vào service; kiểm quyền nằm trong service (business layer).
+ router.get('/:id', requireScope('tasks:read'), (req, res) => {
+   res.json(taskService.getTask(req.user, req.params.id))
+ })
+ 
+-// STARTER: PATCH chưa kiểm quyền, sửa ở V2/V3.
+ router.patch('/:id', requireScope('tasks:write'), (req, res) => {
+-  const task = db.findTask(req.params.id)
+-  if (!task) throw notFound()
+-  res.json(db.updateTask(task.id, req.body))
++  res.json(taskService.updateTask(req.user, req.params.id, req.body))
+ })
+ 
+ module.exports = router
+diff --git a/src/services/projectService.js b/src/services/projectService.js
+new file mode 100644
+index 0000000..61a7b0c
+--- /dev/null
++++ b/src/services/projectService.js
+@@ -0,0 +1,35 @@
++// PEP cho các chức năng quản lý project (chặn BFLA: gọi chức năng vượt role).
++const db = require('../db')
++const { ROLES } = require('../policy')
++const { loadProject, enforce } = require('./access')
++const { badRequest, notFound, conflict } = require('../errors')
++
++function deleteProject(user, projectId) {
++  const resource = loadProject(projectId)
++  enforce(user, 'project:delete', resource)
++  db.deleteProject(projectId)
++}
++
++// `role` ở đây là role của người được thêm, không phải role của người gọi.
++function addMember(user, projectId, { userId, role } = {}) {
++  const resource = loadProject(projectId)
++  enforce(user, 'member:manage', resource)
++
++  if (!ROLES.includes(role)) throw badRequest('invalid_role')
++  if (!db.findUser(userId)) throw badRequest('invalid_user')
++  if (db.findMembership(userId, projectId)) throw conflict('already_member')
++  return db.addMember({ projectId, userId, role })
++}
++
++function removeMember(user, projectId, userId) {
++  const resource = loadProject(projectId)
++  enforce(user, 'member:manage', resource)
++
++  const membership = db.findMembership(userId, projectId)
++  if (!membership) throw notFound()
++  const owners = db.listMembers(projectId).filter(m => m.role === 'Owner')
++  if (membership.role === 'Owner' && owners.length === 1) throw conflict('last_owner')
++  db.removeMember(projectId, userId)
++}
++
++module.exports = { deleteProject, addMember, removeMember }
+diff --git a/src/services/taskService.js b/src/services/taskService.js
+index 7d075cf..976041a 100644
+--- a/src/services/taskService.js
++++ b/src/services/taskService.js
+@@ -1,6 +1,14 @@
+-// PEP cho task: mọi entry point (route, job, export) đọc task qua service này.
++// PEP cho task: mọi entry point (route, job, export) đọc và sửa task qua service này.
+ const db = require('../db')
+ const { loadTask, loadProject, enforce } = require('./access')
++const { badRequest } = require('../errors')
++
++// Chỉ các field này được sửa qua PATCH; id, projectId, assignee bị bỏ qua (chống mass assignment).
++const EDITABLE_FIELDS = ['title', 'description', 'status']
++const STATUSES = ['Open', 'Closed']
++
++const pick = (body, fields) =>
++  Object.fromEntries(fields.filter(f => Object.hasOwn(body, f)).map(f => [f, body[f]]))
+ 
+ function getTask(user, taskId) {
+   const resource = loadTask(taskId)
+@@ -15,4 +23,14 @@ function listProjectTasks(user, projectId) {
+   return db.listTasksByProject(projectId)
+ }
+ 
+-module.exports = { getTask, listProjectTasks }
++function updateTask(user, taskId, body = {}) {
++  const resource = loadTask(taskId)
++  // Kiểm quyền trên bản ghi đang lưu, trước khi áp dụng bất kỳ thay đổi nào từ body.
++  enforce(user, 'task:edit', resource)
++
++  const patch = pick(body, EDITABLE_FIELDS)
++  if ('status' in patch && !STATUSES.includes(patch.status)) throw badRequest('invalid_status')
++  return db.updateTask(taskId, patch)
++}
++
++module.exports = { getTask, listProjectTasks, updateTask }

@@ -1,0 +1,121 @@
+diff --git a/src/policy.js b/src/policy.js
+new file mode 100644
+index 0000000..01e2f35
+--- /dev/null
++++ b/src/policy.js
+@@ -0,0 +1,17 @@
++// PDP (Policy Decision Point): trả lời allow(subject, action, resource).
++// Hàm thuần, không biết gì về HTTP. `resource` = { project, task? } luôn được nạp từ DB.
++const db = require('./db')
++
++const allow = reason => ({ allow: true, reason })
++// visible = false: người gọi không được biết resource tồn tại (PEP trả 404 thay vì 403).
++const deny = (reason, { visible }) => ({ allow: false, visible, reason })
++
++function decide(user, action, { project }) {
++  // ReBAC: người gọi phải là thành viên của project chứa resource.
++  const membership = db.findMembership(user.id, project.id)
++  if (!membership) return deny('not_member', { visible: false })
++
++  return allow('member')
++}
++
++module.exports = { decide }
+diff --git a/src/routes/projects.js b/src/routes/projects.js
+index c13a152..7a7f1c9 100644
+--- a/src/routes/projects.js
++++ b/src/routes/projects.js
+@@ -2,13 +2,13 @@ const router = require('express').Router()
+ const db = require('../db')
+ const { requireScope } = require('../auth')
+ const { notFound } = require('../errors')
++const taskService = require('../services/taskService')
+ 
+-// STARTER: mọi người đã đăng nhập đều gọi được các chức năng quản lý project (lỗi BFLA có chủ đích).
+ router.get('/:id/tasks', requireScope('tasks:read'), (req, res) => {
+-  if (!db.findProject(req.params.id)) throw notFound()
+-  res.json(db.listTasksByProject(req.params.id))
++  res.json(taskService.listProjectTasks(req.user, req.params.id))
+ })
+ 
++// STARTER: mọi người đã đăng nhập đều gọi được các chức năng quản lý project (lỗi BFLA có chủ đích), sửa ở V2.
+ router.delete('/:id', requireScope('projects:manage'), (req, res) => {
+   if (!db.findProject(req.params.id)) throw notFound()
+   db.deleteProject(req.params.id)
+diff --git a/src/routes/tasks.js b/src/routes/tasks.js
+index ab88a47..cae9326 100644
+--- a/src/routes/tasks.js
++++ b/src/routes/tasks.js
+@@ -2,14 +2,13 @@ const router = require('express').Router()
+ const db = require('../db')
+ const { requireScope } = require('../auth')
+ const { notFound } = require('../errors')
++const taskService = require('../services/taskService')
+ 
+-// STARTER: chỉ kiểm token và scope, KHÔNG kiểm quyền trên task (lỗi IDOR/BOLA có chủ đích).
+ router.get('/:id', requireScope('tasks:read'), (req, res) => {
+-  const task = db.findTask(req.params.id)
+-  if (!task) throw notFound()
+-  res.json(task)
++  res.json(taskService.getTask(req.user, req.params.id))
+ })
+ 
++// STARTER: PATCH chưa kiểm quyền, sửa ở V2/V3.
+ router.patch('/:id', requireScope('tasks:write'), (req, res) => {
+   const task = db.findTask(req.params.id)
+   if (!task) throw notFound()
+diff --git a/src/services/access.js b/src/services/access.js
+new file mode 100644
+index 0000000..c4fd482
+--- /dev/null
++++ b/src/services/access.js
+@@ -0,0 +1,25 @@
++// Phần dùng chung của PEP: nạp resource từ DB rồi áp dụng quyết định của PDP.
++const db = require('../db')
++const { decide } = require('../policy')
++const { notFound, forbidden } = require('../errors')
++
++// project luôn suy ra từ task đang lưu, không lấy projectId từ request.
++function loadTask(taskId) {
++  const task = db.findTask(taskId)
++  if (!task) throw notFound()
++  return { task, project: db.findProject(task.projectId) }
++}
++
++function loadProject(projectId) {
++  const project = db.findProject(projectId)
++  if (!project) throw notFound()
++  return { project }
++}
++
++function enforce(user, action, resource) {
++  const decision = decide(user, action, resource)
++  if (!decision.allow) throw decision.visible ? forbidden() : notFound()
++  return decision
++}
++
++module.exports = { loadTask, loadProject, enforce }
+diff --git a/src/services/taskService.js b/src/services/taskService.js
+new file mode 100644
+index 0000000..7d075cf
+--- /dev/null
++++ b/src/services/taskService.js
+@@ -0,0 +1,18 @@
++// PEP cho task: mọi entry point (route, job, export) đọc task qua service này.
++const db = require('../db')
++const { loadTask, loadProject, enforce } = require('./access')
++
++function getTask(user, taskId) {
++  const resource = loadTask(taskId)
++  enforce(user, 'task:read', resource)
++  return resource.task
++}
++
++// Một quyết định cho cả project thay vì kiểm từng task (tránh N+1 truy vấn quyền).
++function listProjectTasks(user, projectId) {
++  const resource = loadProject(projectId)
++  enforce(user, 'task:read', resource)
++  return db.listTasksByProject(projectId)
++}
++
++module.exports = { getTask, listProjectTasks }
