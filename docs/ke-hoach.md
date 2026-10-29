@@ -1,6 +1,6 @@
 # Kế hoạch làm bài Block 6: Task Management API (Authorization)
 
-> **Trạng thái: đã hoàn thành** trong repo này ([README](../README.md), git tag `starter → v1 → v2 → v3 → v4-pre → v4 → final`, 70/70 test, 17/17 oracle).
+> **Trạng thái: đã hoàn thành** trong repo này ([README](../README.md), git tag `starter → v1 → v2 → v3 → v4-pre → v4 → final`, 73/73 test, 17/17 oracle; có trang demo `npm run demo`).
 > Khác với kế hoạch ban đầu: token chứa `sub` + `scope` (vẫn không có role/tenant) để minh họa lớp OAuth2 scope; thêm user `erin` (cùng tenant, chưa thuộc project) để test thêm thành viên; thêm tag `v4-pre` (Admin toàn cục, cố ý sai) để có evidence đỏ cho V4; thêm `GET /tasks` + test nhất quán check/list và unit test PDP.
 > Thuyết minh + câu hỏi vấn đáp: [docs/thuyet-minh/](thuyet-minh/README.md).
 

@@ -6,11 +6,23 @@ API quản lý task có sẵn xác thực JWT. Bài làm bổ sung **kiểm quy�
 
 ```bash
 npm install
-npm test                         # 70 test, gồm 17 test oracle của bài
+npm test                         # 73 test, gồm 17 test oracle của bài
 npx jest --coverage              # policy.js phủ 100% nhánh
 npm start                        # http://localhost:3000
 node scripts/token.js alice      # in token để gọi bằng curl
 ```
+
+### Trang demo trên trình duyệt
+
+```bash
+npm run demo                     # mở http://localhost:3100/demo/
+```
+
+Chọn người gọi, gửi request bất kỳ, xem response và lệnh curl tương đương; chạy từng kịch bản hoặc cả 21 kịch bản (17 oracle + 4 bổ sung); bảng "Dữ liệu hiện tại" cho thấy request bị từ chối không làm đổi dữ liệu.
+
+Server demo (`demo/server.js`) bọc app thật và thêm `/demo`, `/dev/token`, `/dev/reset`, `/dev/state`. Vì `/dev/token` cấp token cho bất kỳ ai, server này chỉ nghe trên `127.0.0.1` và **không** được mount vào `src/app.js` (test `[S1]` khẳng định app chính không có endpoint này).
+
+### Demo bằng curl
 
 Demo nhanh lỗi IDOR (chạy server tạm, Alice đọc A1 và B1):
 

@@ -36,6 +36,9 @@ function resetDb() {
   state = structuredClone(SEED)
 }
 
+// Bản sao toàn bộ dữ liệu, chỉ dùng cho trang demo (/dev/state).
+const snapshot = () => structuredClone(state)
+
 const findUser = id => state.users.find(u => u.id === id)
 const findProject = id => state.projects.find(p => p.id === id)
 const findTask = id => state.tasks.find(t => t.id === id)
@@ -72,6 +75,7 @@ resetDb()
 
 module.exports = {
   resetDb,
+  snapshot,
   findUser,
   findProject,
   findTask,

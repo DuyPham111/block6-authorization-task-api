@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task API Demo</title>
+<style>
+:root {
+  --bg: #F6F4EF; --card: #FBFAF7; --ink: #1B2430; --muted: #5B616B; --line: #D9D2C3; --alt: #ECE7DC;
+  --blue: #1F5FA8; --blue-bg: #DCE6F2; --orange: #9A3F07; --orange-bg: #F6E0C8; --gray-bg: #E4E6EA;
+  --mono: ui-monospace, "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 14px 24px; background: var(--card); border-bottom: 1px solid var(--line) }
+h1 { font-size: 20px; margin: 0 }
+h2 { font-size: 15px; margin: 0 0 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted) }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: 13px }
+main { display: grid; grid-template-columns: 290px minmax(0, 1fr) 430px; gap: 16px; padding: 16px 24px 32px; align-items: start }
+@media (max-width: 1280px) { main { grid-template-columns: 290px minmax(0, 1fr) } #scenarios { grid-column: 1 / -1 } }
+@media (max-width: 800px) { main { grid-template-columns: 1fr; padding: 16px } header { padding: 14px 16px } }
+.col { display: flex; flex-direction: column; gap: 16px; min-width: 0 }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px }
+.head h2 { margin: 0 }
+button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 8px; padding: 7px 12px }
+button:hover { border-color: var(--ink) }
+button:disabled { opacity: .5; cursor: default }
+button.primary { background: var(--ink); color: #F3EFE6; border-color: var(--ink); font-weight: 600 }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px }
+label { display: block; font-size: 13px; color: var(--muted); margin-top: 12px }
+input, select, textarea { font: inherit; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; width: 100%; margin-top: 4px }
+textarea, #path { font-family: var(--mono); font-size: 13px }
+.users { display: flex; flex-direction: column; gap: 6px }
+.user { text-align: left; display: flex; flex-direction: column; gap: 1px; padding: 8px 12px }
+.user b { font-size: 14px }
+.user span { font-size: 12px; color: var(--muted) }
+.user[aria-pressed="true"] { background: var(--blue-bg); border-color: var(--blue) }
+.check { display: flex; align-items: center; gap: 8px; color: var(--ink) }
+.check input { width: auto; margin: 0 }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px }
+.quick button { font-family: var(--mono); font-size: 12px; padding: 5px 8px }
+.row { display: flex; gap: 8px }
+.row select { width: 110px; flex: none; margin: 0 }
+.row input { margin: 0 }
+.send { margin-top: 14px; display: flex; align-items: center; gap: 12px }
+.hint { font-size: 12px; color: var(--muted) }
+.status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border-radius: 8px; font-weight: 600; background: var(--alt) }
+.status .code { font-family: var(--mono); font-size: 18px }
+.status .ms { margin-left: auto; font-weight: 400; font-size: 12px; color: var(--muted) }
+.allow { background: var(--blue-bg); color: var(--blue) }
+.deny { background: var(--orange-bg); color: var(--orange) }
+.auth { background: var(--gray-bg); color: var(--ink) }
+.verdict { margin-top: 10px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: #fff; font-size: 14px }
+.verdict p { margin: 4px 0 0 }
+.log { font-family: var(--mono); font-size: 12px; color: var(--muted); margin: 8px 0 0; white-space: pre-wrap }
+pre { font-family: var(--mono); font-size: 13px; background: #1B2430; color: #F3EFE6; border-radius: 8px; padding: 12px; margin: 10px 0 0; overflow: auto; max-height: 320px; white-space: pre-wrap; word-break: break-word }
+details { margin-top: 10px }
+summary { cursor: pointer; font-size: 13px; color: var(--muted) }
+.group { margin-top: 14px }
+.group h3 { font-size: 13px; margin: 0 0 6px; color: var(--muted) }
+.sc { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 8px; border-radius: 8px }
+.sc:nth-child(even) { background: var(--alt) }
+.sc .id { font-family: var(--mono); font-size: 12px; font-weight: 600 }
+.sc .t { font-size: 13px }
+.sc .exp { font-size: 12px; color: var(--muted) }
+.sc .act { display: flex; align-items: center; gap: 6px }
+.sc .act button { padding: 4px 10px; font-size: 12px }
+.res { font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 6px; min-width: 64px; text-align: center }
+.res.pass { background: var(--blue-bg); color: var(--blue) }
+.res.fail { background: var(--orange-bg); color: var(--orange) }
+.summary { font-size: 13px; color: var(--muted); margin: 0 }
+.summary.done { color: var(--blue); font-weight: 600 }
+table { width: 100%; border-collapse: collapse; font-size: 13px }
+th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { color: var(--muted); font-weight: 600 }
+td.mono { font-family: var(--mono) }
+.state-sec { margin-top: 12px }
+.state-sec h3 { font-size: 13px; margin: 0 0 4px }
+.empty { color: var(--muted); font-size: 13px; font-style: italic }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Task API · Demo phân quyền</h1>
+    <p class="sub">Block 6 · server demo cục bộ: token cấp qua /dev/token, mọi request đi qua app thật</p>
+  </div>
+  <button id="reset">Reset dữ liệu về seed</button>
+</header>
+
+<main>
+  <section class="col">
+    <div class="card">
+      <h2>1 · Người gọi</h2>
+      <div class="users" id="users"></div>
+      <label for="scope">Scope của token</label>
+      <select id="scope"></select>
+      <label class="check"><input type="checkbox" id="expired"> Token đã hết hạn</label>
+    </div>
+    <div class="card">
+      <div class="head"><h2>Dữ liệu hiện tại</h2><button id="refresh" title="Tải lại">Tải lại</button></div>
+      <div id="state"><p class="empty">Đang tải…</p></div>
+    </div>
+  </section>
+
+  <section class="col">
+    <div class="card">
+      <h2>2 · Request</h2>
+      <div class="quick" id="quick"></div>
+      <div class="row">
+        <select id="method" aria-label="Method"><option>GET</option><option>PATCH</option><option>POST</option><option>DELETE</option></select>
+        <input id="path" value="/tasks/A1" aria-label="Path" spellcheck="false">
+      </div>
+      <label for="headers">Header thêm, mỗi dòng một header (thử giả mạo: X-Tenant-Id, X-Role)</label>
+      <textarea id="headers" rows="2" placeholder="X-Tenant-Id: beta" spellcheck="false"></textarea>
+      <label for="body">Body JSON</label>
+      <textarea id="body" rows="4" placeholder='{"title": "Tiêu đề mới"}' spellcheck="false"></textarea>
+      <div class="send"><button id="send" class="primary">Gửi request</button><span class="hint">Ctrl + Enter</span></div>
+    </div>
+    <div class="card" aria-live="polite">
+      <h2>3 · Response</h2>
+      <div id="status" class="status">Chưa gửi request nào</div>
+      <div id="verdict"></div>
+      <pre id="resBody">—</pre>
+      <details><summary>Lệnh curl tương đương (chạy trong thư mục task-api)</summary><pre id="curl">—</pre></details>
+    </div>
+  </section>
+
+  <section class="col" id="scenarios">
+    <div class="card">
+      <div class="head"><h2>Kịch bản test</h2><button id="runAll" class="primary">Chạy tất cả</button></div>
+      <p class="summary" id="summary">Mỗi kịch bản reset dữ liệu trước khi chạy, rồi so mã trả về với kỳ vọng.</p>
+      <div id="list"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s)
+
+function el(tag, props = {}, ...children) {
+  const node = document.createElement(tag)
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') node.className = v
+    else if (k.startsWith('on')) node.addEventListener(k.slice(2), v)
+    else node.setAttribute(k, v)
+  }
+  for (const c of children.flat()) node.append(c instanceof Node ? c : document.createTextNode(String(c)))
+  return node
+}
+
+const USERS = [
+  { id: null, name: 'Anonymous', note: 'Không gửi token' },
+  { id: 'alice', name: 'Alice', note: 'Owner project Alpha' },
+  { id: 'bob', name: 'Bob', note: 'Member Alpha, được giao A1' },
+  { id: 'vera', name: 'Vera', note: 'Viewer Alpha' },
+  { id: 'erin', name: 'Erin', note: 'Tenant Alpha, chưa thuộc project' },
+  { id: 'dana', name: 'Dana', note: 'Admin của tenant Alpha' },
+  { id: 'charlie', name: 'Charlie', note: 'Owner project Beta (tenant Beta)' },
+]
+const FULL = 'tasks:read tasks:write projects:manage'
+const SCOPES = [[FULL, 'Đủ scope'], ['tasks:read', 'Chỉ tasks:read'], ['tasks:write', 'Chỉ tasks:write']]
+const STATUS_TEXT = { 200: 'OK', 201: 'Created', 204: 'No Content', 400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found', 409: 'Conflict', 500: 'Internal Server Error' }
+
+const QUICK = [
+  { method: 'GET', path: '/tasks/A1' },
+  { method: 'GET', path: '/tasks/B1' },
+  { method: 'GET', path: '/tasks' },
+  { method: 'GET', path: '/projects/beta/tasks' },
+  { method: 'PATCH', path: '/tasks/A1', body: { title: 'Cập nhật từ demo' } },
+  { method: 'PATCH', path: '/tasks/A2', body: { title: 'Sửa A2' } },
+  { method: 'DELETE', path: '/projects/alpha' },
+  { method: 'POST', path: '/projects/alpha/members', body: { userId: 'erin', role: 'Viewer' } },
+]
+
+const SCENARIOS = [
+  { id: 'O1', group: 'V1 · IDOR/BOLA', title: 'Anonymous đọc A1', as: null, method: 'GET', path: '/tasks/A1', expect: 401, why: 'Không có token nên lớp authentication chặn trước mọi thứ.' },
+  { id: 'O2', group: 'V1 · IDOR/BOLA', title: 'Alice đọc A1', as: 'alice', method: 'GET', path: '/tasks/A1', expect: 200, why: 'Alice là thành viên project Alpha chứa A1.' },
+  { id: 'O3', group: 'V1 · IDOR/BOLA', title: 'Alice đọc B1 (project Beta)', as: 'alice', method: 'GET', path: '/tasks/B1', expect: 404, why: 'Alice không thuộc Beta (ReBAC). Trả 404 để che sự tồn tại của B1.' },
+  { id: 'O4', group: 'V1 · IDOR/BOLA', title: 'Charlie đọc B1', as: 'charlie', method: 'GET', path: '/tasks/B1', expect: 200, why: 'Charlie là Owner Beta: bản sửa không từ chối người hợp lệ.' },
+  { id: 'O5', group: 'V2 · RBAC', title: 'Vera (Viewer) sửa A1', as: 'vera', method: 'PATCH', path: '/tasks/A1', body: { title: 'Viewer sửa' }, expect: 403, why: 'Viewer không có permission task:edit (RBAC).' },
+  { id: 'O6', group: 'V2 · RBAC', title: 'Bob (Member) xóa project Alpha', as: 'bob', method: 'DELETE', path: '/projects/alpha', expect: 403, why: 'Member không có project:delete. Ẩn nút trên giao diện không đủ, server phải chặn.' },
+  { id: 'O7', group: 'V2 · RBAC', title: 'Bob (Member) thêm thành viên', as: 'bob', method: 'POST', path: '/projects/alpha/members', body: { userId: 'erin', role: 'Viewer' }, expect: 403, why: 'Chỉ Owner có member:manage.' },
+  { id: 'O8', group: 'V2 · RBAC', title: 'Alice (Owner) xóa project Alpha', as: 'alice', method: 'DELETE', path: '/projects/alpha', expect: 204, why: 'Owner có project:delete. Xem bảng dữ liệu: Alpha và task của nó biến mất.' },
+  { id: 'O9', group: 'V2 · RBAC', title: 'Alice (Owner) thêm Erin làm Viewer', as: 'alice', method: 'POST', path: '/projects/alpha/members', body: { userId: 'erin', role: 'Viewer' }, expect: 201, why: 'Owner có member:manage.' },
+  { id: 'O10', group: 'V2 · RBAC', title: 'Bob tự khai role=Admin để xóa project', as: 'bob', method: 'DELETE', path: '/projects/alpha', headers: { 'X-Role': 'Admin' }, body: { role: 'Admin' }, expect: 403, why: 'Role đọc từ bảng thành viên trong DB, không đọc từ body hay header.' },
+  { id: 'O11', group: 'V3 · ReBAC + ABAC', title: 'Bob sửa A1 (được giao, còn Open)', as: 'bob', method: 'PATCH', path: '/tasks/A1', body: { title: 'Bob cập nhật' }, expect: 200, why: 'Member + được giao + task Open: đủ ba điều kiện.' },
+  { id: 'O12', group: 'V3 · ReBAC + ABAC', title: 'Bob sửa A2 (chưa được giao)', as: 'bob', method: 'PATCH', path: '/tasks/A2', body: { title: 'Bob sửa A2' }, expect: 403, why: 'ABAC: assignee của A2 không phải Bob.' },
+  { id: 'O13', group: 'V3 · ReBAC + ABAC', title: 'Bob sửa A1 khi A1 đã Closed', setup: [{ as: 'alice', method: 'PATCH', path: '/tasks/A1', body: { status: 'Closed' } }], as: 'bob', method: 'PATCH', path: '/tasks/A1', body: { title: 'Sửa task đã đóng' }, expect: 403, why: 'ABAC: task không còn Open. Bước chuẩn bị dùng Owner đóng A1.' },
+  { id: 'O14', group: 'V3 · ReBAC + ABAC', title: 'Bob sửa B1 (project khác)', as: 'bob', method: 'PATCH', path: '/tasks/B1', body: { title: 'Sửa task Beta' }, expect: 404, why: 'Bob không thuộc Beta (ReBAC) nên không được biết B1 tồn tại.' },
+  { id: 'O15', group: 'V4 · Tenant', title: 'Dana (Admin tenant Alpha) đọc A1', as: 'dana', method: 'GET', path: '/tasks/A1', expect: 200, why: 'Admin có toàn quyền trong tenant của mình.' },
+  { id: 'O16', group: 'V4 · Tenant', title: 'Dana đọc B1 (tenant Beta)', as: 'dana', method: 'GET', path: '/tasks/B1', expect: 404, why: 'Tenant boundary đứng trước kiểm Admin.' },
+  { id: 'O17', group: 'V4 · Tenant', title: 'Dana đọc B1 kèm X-Tenant-Id: beta', as: 'dana', method: 'GET', path: '/tasks/B1', headers: { 'X-Tenant-Id': 'beta' }, expect: 404, why: 'Tenant của người gọi lấy từ DB, header bị bỏ qua.' },
+  { id: 'E1', group: 'Bổ sung', title: 'Token của Alice đã hết hạn', as: 'alice', expired: true, method: 'GET', path: '/tasks/A1', expect: 401, why: 'Token hết hạn thì không còn xác thực được.' },
+  { id: 'E3', group: 'Bổ sung', title: 'Bob gửi assignee=bob để sửa A2', as: 'bob', method: 'PATCH', path: '/tasks/A2', body: { assignee: 'bob', title: 'Tự giao cho mình' }, expect: 403, why: 'Kiểm quyền trên bản ghi đang lưu, trước khi áp dụng body.' },
+  { id: 'E5', group: 'Bổ sung', title: 'Owner gỡ Bob, Bob đọc A1 ngay sau đó', setup: [{ as: 'alice', method: 'DELETE', path: '/projects/alpha/members/bob' }], as: 'bob', method: 'GET', path: '/tasks/A1', expect: 404, why: 'Thu hồi có hiệu lực ngay: role đọc từ DB mỗi request, không cache.' },
+  { id: 'E7', group: 'Bổ sung', title: 'Token chỉ có tasks:read đọc B1', as: 'alice', scope: 'tasks:read', method: 'GET', path: '/tasks/B1', expect: 404, why: 'Scope giới hạn token, không thay được kiểm quyền trên object.' },
+]
+
+const ui = { user: 'alice', busy: false }
+const tokens = new Map()
+
+const nameOf = id => (USERS.find(u => u.id === id) || USERS[0]).name
+
+async function tokenFor(userId, scope, expired) {
+  const key = `${userId}|${scope}|${expired}`
+  const cached = tokens.get(key)
+  if (cached && Date.now() - cached.at < 10 * 60 * 1000) return cached.token
+  const res = await fetch('/dev/token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, scope, expired }) })
+  if (!res.ok) throw new Error(`Không lấy được token (${res.status})`)
+  const { token } = await res.json()
+  tokens.set(key, { token, at: Date.now() })
+  return token
+}
+
+async function send({ as, scope = FULL, expired = false, method, path, headers = {}, body }) {
+  const h = { ...headers }
+  if (as) h.Authorization = `Bearer ${await tokenFor(as, scope, expired)}`
+  const init = { method, headers: h }
+  if (body !== undefined && method !== 'GET') {
+    h['Content-Type'] = 'application/json'
+    init.body = JSON.stringify(body)
+  }
+  const t0 = performance.now()
+  const res = await fetch(path, init)
+  const text = await res.text()
+  return { status: res.status, text, ms: Math.round(performance.now() - t0) }
+}
+
+const kindOf = status => (status < 300 ? 'allow' : status === 401 ? 'auth' : status === 403 || status === 404 ? 'deny' : '')
+const meaningOf = status =>
+  status < 300 ? 'Cho phép' : status === 401 ? 'Chưa xác thực' : status === 403 ? 'Từ chối' : status === 404 ? 'Không tồn tại hoặc bị che' : status === 400 ? 'Dữ liệu không hợp lệ' : status === 409 ? 'Xung đột' : ''
+
+function pretty(text) {
+  if (!text) return '(không có body)'
+  try { return JSON.stringify(JSON.parse(text), null, 2) } catch { return text }
+}
+
+function curlOf(req) {
+  const parts = [`curl -i -X ${req.method} "${location.origin}${req.path}"`]
+  if (req.as) {
+    const scope = req.scope && req.scope !== FULL ? ` ${req.scope}` : ''
+    parts.push(`-H "Authorization: Bearer $(node scripts/token.js ${req.as}${scope})"${req.expired ? '   # demo dùng token đã hết hạn' : ''}`)
+  }
+  for (const [k, v] of Object.entries(req.headers || {})) parts.push(`-H "${k}: ${v}"`)
+  if (req.body !== undefined && req.method !== 'GET') parts.push(`-H "Content-Type: application/json" -d '${JSON.stringify(req.body)}'`)
+  return parts.join(' \\\n  ')
+}
+
+function showResponse(req, r, extra = {}) {
+  const status = $('#status')
+  status.className = `status ${kindOf(r.status)}`
+  status.replaceChildren(
+    el('span', { class: 'code' }, `${r.status} ${STATUS_TEXT[r.status] || ''}`),
+    el('span', {}, meaningOf(r.status)),
+    el('span', { class: 'ms' }, `${nameOf(req.as)} · ${req.method} ${req.path} · ${r.ms} ms`),
+  )
+  const verdict = $('#verdict')
+  verdict.replaceChildren()
+  if (extra.expect !== undefined) {
+    const pass = r.status === extra.expect
+    verdict.append(el('div', { class: 'verdict' },
+      el('b', {}, `${extra.id} · Kỳ vọng ${extra.expect}, thực tế ${r.status}: ${pass ? 'Đạt' : 'Sai'}`),
+      el('p', {}, `Vì sao: ${extra.why}`),
+      extra.log && extra.log.length ? el('p', { class: 'log' }, extra.log.join('\n')) : '',
+    ))
+  }
+  $('#resBody').textContent = pretty(r.text)
+  $('#curl').textContent = curlOf(req)
+}
+
+function showError(err) {
+  const status = $('#status')
+  status.className = 'status deny'
+  status.textContent = `Lỗi: ${err.message}`
+}
+
+function renderUsers() {
+  $('#users').replaceChildren(...USERS.map(u =>
+    el('button', { class: 'user', type: 'button', 'aria-pressed': String(u.id === ui.user), onclick: () => selectUser(u.id) },
+      el('b', {}, u.name), el('span', {}, u.note))))
+  const anon = ui.user === null
+  $('#scope').disabled = anon
+  $('#expired').disabled = anon
+}
+
+function selectUser(id) {
+  ui.user = id
+  renderUsers()
+}
+
+function fillBuilder({ method, path, headers = {}, body }) {
+  $('#method').value = method
+  $('#path').value = path
+  $('#headers').value = Object.entries(headers).map(([k, v]) => `${k}: ${v}`).join('\n')
+  $('#body').value = body === undefined ? '' : JSON.stringify(body, null, 2)
+}
+
+function readBuilder() {
+  const headers = {}
+  for (const line of $('#headers').value.split('\n')) {
+    const i = line.indexOf(':')
+    if (i > 0) headers[line.slice(0, i).trim()] = line.slice(i + 1).trim()
+  }
+  const raw = $('#body').value.trim()
+  let body
+  if (raw) {
+    try { body = JSON.parse(raw) } catch { throw new Error('Body không phải JSON hợp lệ') }
+  }
+  let path = $('#path').value.trim() || '/'
+  if (!path.startsWith('/')) path = `/${path}`
+  return { as: ui.user, scope: $('#scope').value, expired: $('#expired').checked, method: $('#method').value, path, headers, body }
+}
+
+async function sendFromBuilder() {
+  if (ui.busy) return
+  try {
+    const req = readBuilder()
+    const r = await send(req)
+    showResponse(req, r)
+  } catch (err) {
+    showError(err)
+  }
+  refreshState()
+}
+
+async function resetData() {
+  await fetch('/dev/reset', { method: 'POST' })
+}
+
+async function runScenario(sc, { show = true } = {}) {
+  await resetData()
+  const log = []
+  for (const step of sc.setup || []) {
+    const r = await send(step)
+    log.push(`Chuẩn bị: ${nameOf(step.as)} ${step.method} ${step.path}${step.body ? ' ' + JSON.stringify(step.body) : ''} → ${r.status}`)
+  }
+  const r = await send(sc)
+  const pass = r.status === sc.expect
+  const badge = document.getElementById(`res-${sc.id}`)
+  badge.className = `res ${pass ? 'pass' : 'fail'}`
+  badge.textContent = `${pass ? '✓' : '✗'} ${r.status}`
+  badge.title = pass ? 'Đạt' : 'Sai'
+  if (show) {
+    selectUser(sc.as ?? null)
+    $('#scope').value = sc.scope || FULL
+    $('#expired').checked = !!sc.expired
+    fillBuilder(sc)
+    showResponse(sc, r, { id: sc.id, expect: sc.expect, why: sc.why, log })
+  }
+  return pass
+}
+
+function setBusy(busy) {
+  ui.busy = busy
+  for (const b of document.querySelectorAll('#list button, #runAll, #send, #reset')) b.disabled = busy
+}
+
+async function runOne(sc) {
+  setBusy(true)
+  try { await runScenario(sc) } catch (err) { showError(err) }
+  setBusy(false)
+  refreshState()
+}
+
+async function runAll() {
+  setBusy(true)
+  const summary = $('#summary')
+  summary.className = 'summary'
+  const t0 = performance.now()
+  let passed = 0
+  try {
+    for (const [i, sc] of SCENARIOS.entries()) {
+      summary.textContent = `Đang chạy ${i + 1}/${SCENARIOS.length}: ${sc.id}…`
+      if (await runScenario(sc, { show: false })) passed++
+    }
+    await resetData()
+    summary.className = passed === SCENARIOS.length ? 'summary done' : 'summary'
+    summary.textContent = `${passed}/${SCENARIOS.length} kịch bản đạt · ${Math.round(performance.now() - t0)} ms · dữ liệu đã reset về seed`
+  } catch (err) {
+    showError(err)
+  }
+  setBusy(false)
+  refreshState()
+}
+
+function renderScenarios() {
+  const groups = [...new Set(SCENARIOS.map(s => s.group))]
+  $('#list').replaceChildren(...groups.map(g =>
+    el('div', { class: 'group' },
+      el('h3', {}, g),
+      ...SCENARIOS.filter(s => s.group === g).map(sc =>
+        el('div', { class: 'sc' },
+          el('span', { class: 'id' }, sc.id),
+          el('div', {}, el('div', { class: 't' }, sc.title), el('div', { class: 'exp' }, `${nameOf(sc.as)} · ${sc.method} ${sc.path} · kỳ vọng ${sc.expect}`)),
+          el('div', { class: 'act' },
+            el('span', { class: 'res', id: `res-${sc.id}` }, '—'),
+            el('button', { type: 'button', onclick: () => runOne(sc), 'aria-label': `Chạy kịch bản ${sc.id}` }, 'Chạy'))))),
+  ))
+  $('#runAll').textContent = `Chạy tất cả ${SCENARIOS.length}`
+}
+
+async function refreshState() {
+  try {
+    const s = await (await fetch('/dev/state')).json()
+    const projectName = Object.fromEntries(s.projects.map(p => [p.id, `${p.id} (tenant ${p.tenantId})`]))
+    const tasks = s.tasks.length
+      ? el('table', {},
+          el('tr', {}, el('th', {}, 'Task'), el('th', {}, 'Project'), el('th', {}, 'Assignee'), el('th', {}, 'Status')),
+          ...s.tasks.map(t => el('tr', { title: t.title },
+            el('td', { class: 'mono' }, t.id), el('td', {}, t.projectId), el('td', {}, t.assignee || '—'), el('td', {}, t.status))))
+      : el('p', { class: 'empty' }, 'Không còn task nào')
+    const members = s.projects.length
+      ? el('table', {},
+          el('tr', {}, el('th', {}, 'Project'), el('th', {}, 'Thành viên')),
+          ...s.projects.map(p => el('tr', {},
+            el('td', {}, projectName[p.id]),
+            el('td', {}, s.members.filter(m => m.projectId === p.id).map(m => `${m.userId} (${m.role})`).join(', ') || '—'))))
+      : el('p', { class: 'empty' }, 'Không còn project nào')
+    $('#state').replaceChildren(
+      el('div', {}, el('h3', {}, 'Task'), tasks),
+      el('div', { class: 'state-sec' }, el('h3', {}, 'Project và thành viên'), members),
+    )
+  } catch {
+    $('#state').replaceChildren(el('p', { class: 'empty' }, 'Không tải được dữ liệu. Server demo còn chạy không?'))
+  }
+}
+
+$('#scope').append(...SCOPES.map(([value, label]) => el('option', { value }, label)))
+$('#quick').append(...QUICK.map(q => el('button', { type: 'button', onclick: () => fillBuilder(q) }, `${q.method} ${q.path}`)))
+$('#send').addEventListener('click', sendFromBuilder)
+$('#runAll').addEventListener('click', runAll)
+$('#refresh').addEventListener('click', refreshState)
+$('#reset').addEventListener('click', async () => {
+  await resetData()
+  for (const b of document.querySelectorAll('.res')) { b.className = 'res'; b.textContent = '—' }
+  $('#summary').className = 'summary'
+  $('#summary').textContent = 'Đã reset dữ liệu về seed.'
+  refreshState()
+})
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) sendFromBuilder() })
+
+renderUsers()
+renderScenarios()
+refreshState()
+</script>
+</body>
+</html>

@@ -82,7 +82,7 @@ Mỗi phiên bản là một git tag: `starter → v1 → v2 → v3 → v4-pre �
 Đ: Guard của NestJS chạy *trước* controller, lúc đó chưa nạp resource. Muốn kiểm quyền trên object vẫn phải viết trong service. Express giúp em cho thấy rõ từng lớp: middleware xác thực → scope → service (PEP) → policy (PDP). Slide của thầy cũng dùng Express.
 
 **H: Sao không dùng database thật?**
-Đ: Trọng tâm là logic phân quyền. Dữ liệu in-memory có `resetDb()` giúp mỗi test độc lập và cả bộ 70 test chạy khoảng 2 giây. Service và policy không phụ thuộc vào cách lưu trữ, thay bằng SQL chỉ cần sửa `db.js`. Đánh đổi là chưa đo được hiệu năng truy vấn danh sách. Em đã ghi điều này ở phần giới hạn.
+Đ: Trọng tâm là logic phân quyền. Dữ liệu in-memory có `resetDb()` giúp mỗi test độc lập và cả bộ 73 test chạy khoảng 2 giây. Service và policy không phụ thuộc vào cách lưu trữ, thay bằng SQL chỉ cần sửa `db.js`. Đánh đổi là chưa đo được hiệu năng truy vấn danh sách. Em đã ghi điều này ở phần giới hạn.
 
 **H: Tại sao token không chứa role? Mỗi request đọc DB có chậm không?**
 Đ: Role nằm theo project, mỗi user có thể có nhiều role khác nhau, và quyền có thể bị thu hồi bất cứ lúc nào. Slide 20 cho thấy nếu role nằm trong JWT 15 phút, người bị gỡ vẫn truy cập được tới 15 phút. Đọc membership mỗi request chỉ là một truy vấn có index `(user_id, project_id)`. Nếu cần nhanh hơn thì cache với TTL ngắn và xóa cache khi đổi quyền.

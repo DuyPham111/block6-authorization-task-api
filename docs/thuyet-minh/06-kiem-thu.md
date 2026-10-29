@@ -10,9 +10,10 @@
 | `test/v4.tenant.test.js` | 8 | O15–O17, giả mạo tenantId, membership chéo tenant |
 | `test/consistency.test.js` | 8 | Check và list khớp nhau cho mọi user × task, thu hồi quyền |
 | `test/policy.unit.test.js` | 12 | Unit test PDP: lý do từng nhánh, role lạ, action chưa khai báo |
-| **Tổng** | **70** | Coverage: 98.9% dòng `src/`, `policy.js` 100% nhánh |
+| `test/demo.test.js` | 3 | Server demo tách biệt: app chính không có `/dev/token`, request demo vẫn qua phân quyền thật |
+| **Tổng** | **73** | Coverage: 98.9% dòng `src/`, `policy.js` 100% nhánh |
 
-Ký hiệu trong tên test: `[O*]` test oracle của bài, `[M*]` ô ma trận, `[E*]` bổ sung, `[C*]` nhất quán, `[U*]` unit.
+Ký hiệu trong tên test: `[O*]` test oracle của bài, `[M*]` ô ma trận, `[E*]` bổ sung, `[C*]` nhất quán, `[U*]` unit, `[S*]` server demo.
 
 ## Nguyên tắc viết test
 
@@ -33,7 +34,14 @@ Sinh bởi `node scripts/oracle-matrix.js` (`docs/evidence/oracle-matrix.md`):
 | Oracle qua | 6/17 | 7/17 | 12/17 | 14/17 | 15/17 | 17/17 | 17/17 |
 | Toàn bộ test qua | 16/58* | 23/70 | 46/70 | 52/70 | 54/70 | 62/70 | **70/70** |
 
-\* Ở starter, file unit test PDP không nạp được vì chưa có `policy.js`.
+\* Ở starter, file unit test PDP không nạp được vì chưa có `policy.js`. Bảng này và mục "từ chối hết" bên dưới đo tại tag `final` (70 test), trước khi thêm trang demo và 3 test `[S*]`.
+
+## Trang demo
+
+`npm run demo` mở `http://localhost:3100/demo/`: chọn người gọi, gửi request, xem response và lệnh curl; chạy từng kịch bản hoặc cả 21 kịch bản (17 oracle + E1, E3, E5, E7) với kết luận Đạt/Sai. Server demo chỉ nghe trên `127.0.0.1` và nằm ngoài `src/app.js`.
+
+**H: Trang demo cấp token cho bất kỳ ai, vậy có phải lỗ hổng không?**
+Đ: Endpoint `/dev/token` chỉ có trong `demo/server.js`, một server riêng chỉ nghe trên `127.0.0.1` để thuyết trình. `src/app.js` (bản chạy bằng `npm start`) không import file này. Test `[S1]` gọi `/dev/token` vào app chính: không token thì 401, có token thì 404.
 
 ## Chống bản sửa "từ chối hết"
 

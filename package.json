@@ -6,6 +6,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
+    "demo": "node demo/server.js",
     "test": "jest --runInBand",
     "token": "node scripts/token.js"
   },
